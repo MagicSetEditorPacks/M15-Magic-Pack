@@ -1,0 +1,666 @@
+﻿mse version: 0.3.8
+short name: Cockatrice
+full name: Updated Full Exporter
+position hint: 007
+icon: icon.png
+version: 2018-09-29
+installer group: magic/Export/cockatrice
+
+depends on:
+	package: magic.mse-game
+	version: 2009-07-23
+
+game: magic
+create directory: true
+file type: *.xml|*.xml|*.*|*.*
+
+# By K'yoril, edited by Advent, Updated by Reuben Covington, Updated by Cajun
+# Based on code by Pichoro, Idle Muse, Innuendo and Seeonee
+
+option field:
+	type: choice
+	name: reminder
+	choice: Include Set Code if planning to work with other sets
+option field:
+	type: text
+	name: set Code
+	description: Set Code
+option field:
+	type: text
+	name: images Location
+	description: Location of the Card Images
+option field:
+	type: boolean
+	name: append set code
+	description: Adds the set code to token names to differentiate them
+	initial: no
+
+script:
+	#####replace@(match:"\n", replace:"\</reverse-related>\n \<reverse-related>")+
+	#####replace@(match:";", replace:"\</reverse-related>\n \<reverse-related>")
+	
+	token_export := {contains(card.shape, match:"token") or contains(card.shape, match:"emblem") or contains(card.shape, match:"rulestip")}
+	#Removes commas from DFC walkers
+	remove_commas := replace@(match:":", replace:"")+
+		replace@(match:"<(/|\\\\)?i>", replace:"")+
+		replace@(match:"[\<>:\\\\/\"\\*\\?\\|]", replace:"")
+	exporter_name_filter := filter_text@(match:"!exporte?r?name [^\n\<]+")
+	exporter_name_grabber := replace@(match:"!exporte?r?name ", replace:"")
+	card_name := { if exporter_name_grabber(exporter_name_filter(card.notes)) != "" then exporter_name_grabber(exporter_name_filter(card.notes)) else card.name }
+	convert_related := replace@(match: "!related ?(\n)?", replace:"\n")+
+		replace@(match:"!",replace: "")+
+		replace@(match:" ?; ?", replace:"\n")+
+		replace@(match:"(^[^\r\n\<]+)", replace:{" \<reverse-related>" + _1 + "\</reverse-related>"})+
+		replace@(match:"\<reverse-related>([^\r\n\<]+)\</reverse-related>\<([0-9]+)>", replace:{"\<reverse-related count=\"" + _2 + "\">" + _1 + "\</reverse-related>"})
+	remove_empty := replace@(match:"\<reverse-related>\</reverse-related>", replace:"")
+	filter_related := filter_text@(match:"!relate ?[^!]+!?")
+	write_normal := {
+		"\n"+"\<card>"
+		# Name
+		+"\n "+"\<name>"+remove_commas(card_name())+"\</name>"
+		# Set
+		+"\n "+"\<set picURL=\""+options.images_Location+"/"+remove_commas(card_name())+".full.jpg\" picURLHq=\"\" picURLSt=\"\">"+options.set_Code+"\</set>"
+		# Color
+		+"\n "+"\<color>"
+			+(if contains(card.card_color, match:"multicolor") or contains(card.card_color, match:"hybrid") then "M"
+			 else if contains(card.card_color, match:"white") then "W"
+			 else if contains(card.card_color, match:"blue") then "U"
+			 else if contains(card.card_color, match:"black") then "B"
+			 else if contains(card.card_color, match:"red") then "R"
+			 else if contains(card.card_color, match:"green") then "G"
+			 else "")
+			+"\</color>"
+		# Mana Cost
+		+"\n "+"\<manacost>"+card.casting_cost+"\</manacost>"
+		# Type
+		+"\n "+"\<type>"+replace(card.type, match:"—", replace:"-")+"\</type>"
+		# P/T
+		+(if contains(card.type, match:"Creature") then "\n ")
+			+(if contains(card.type, match:"Creature") then "\<pt>")
+			+(if contains(card.type, match:"Creature") then card.pt)
+			+(if contains(card.type, match:"Creature") then "\</pt>")
+		# Tablerow
+		+"\n "+"\<tablerow>"
+			+(if contains(card.type, match:"Instant") or contains(card.type, match:"Sorcery") then "3"
+			 else if contains(card.type, match:"Creature") then "2"
+			 else if contains(card.type, match:"Land") then "0"
+			 else "1")
+			+"\</tablerow>"
+		# Rules Text
+		+"\n "+"\<text>"+(if card.special_text != "" then card.special_text else card.rule_text)+"\</text>"
+		+"\n"+"\</card>"
+	}
+	write_token := {
+		"\n"+"\<card>"
+		# Name
+		+"\n "+"\<name>"+remove_commas(card_name())+(if options.append_set_code then " " + options.set_Code else "")+"\</name>"
+		# Set
+		+"\n "+"\<set picURL=\""+options.images_Location+"/"+remove_commas(card_name())+".full.jpg\" picURLHq=\"\" picURLSt=\"\">"+options.set_Code+"\</set>"
+		# Color
+		+"\n "+"\<color>"
+			+(if contains(card.card_color, match:"multicolor") or contains(card.card_color, match:"hybrid") then "M"
+			 else if contains(card.card_color, match:"white") then "W"
+			 else if contains(card.card_color, match:"blue") then "U"
+			 else if contains(card.card_color, match:"black") then "B"
+			 else if contains(card.card_color, match:"red") then "R"
+			 else if contains(card.card_color, match:"green") then "G"
+			 else "")
+			+"\</color>"
+		# Type
+		+"\n "+"\<type>"+replace(card.type, match:"—", replace:"-")+"\</type>"
+		# P/T
+		+(if contains(card.type, match:"Creature") then "\n ")
+			+(if contains(card.type, match:"Creature") then "\<pt>")
+			+(if contains(card.type, match:"Creature") then card.pt)
+			+(if contains(card.type, match:"Creature") then "\</pt>")
+		# Tablerow
+		+"\n "+"\<tablerow>"
+			+(if contains(card.type, match:"Instant") or contains(card.type, match:"Sorcery") then "3"
+			 else if contains(card.type, match:"Creature") then "2"
+			 else if contains(card.type, match:"Land") then "0"
+			 else "1")
+			+"\</tablerow>"
+		# Rules Text
+		+"\n "+"\<text>"+card.rule_text+"\</text>"
+		# Token
+		+ "\n \<token>1\</token>"
+		# Reverse Related
+		+ convert_related(filter_related(card.notes))
+		+"\n"+"\</card>"		
+	}
+	write_flip := {
+		"\n"+"\<card>"
+		# Name
+		+"\n "+"\<name>"+remove_commas(card_name())
+		#+" // "+remove_commas(card.name_2)
+		+"\</name>"
+		# Set
+		+"\n "+"\<set picURL=\""+options.images_Location+"/"+remove_commas(card_name())+".full.jpg\" picURLHq=\"\" picURLSt=\"\">"+options.set_Code+"\</set>"
+		# Color
+		+"\n "+"\<color>"
+			+(if contains(card.shape, match:"flip") then
+			 	(if contains(card.card_color, match:"multicolor") or contains(card.card_color, match:"hybrid") then "M"
+			 	else if contains(card.card_color, match:"white") then "W"
+			 	else if contains(card.card_color, match:"blue") then "U"
+			 	else if contains(card.card_color, match:"black") then "B"
+			 	else if contains(card.card_color, match:"red") then "R"
+			 	else if contains(card.card_color, match:"green") then "G"
+			 	else "")
+			 else if card.card_color != "" and card.card_color != "land" and card.card_color != "artifact" and card.card_color_2 != "" and card.card_color_2 != "land" and card.card_color_2 != "artifact"then 
+			 	(if contains(card.card_color, match:"multicolor") or contains(card.card_color, match:"hybrid") or card.card_color != card.card_color_2 then "M"
+			 	else if contains(card.card_color, match:"white") and contains(card.card_color_2, match:"white") then "W"
+				else if contains(card.card_color, match:"blue") and contains(card.card_color_2, match:"blue") then "U"
+				else if contains(card.card_color, match:"black") and contains(card.card_color_2, match:"black") then "B"
+				else if contains(card.card_color, match:"red") and contains(card.card_color_2, match:"red") then "R"
+				else if contains(card.card_color, match:"green") and contains(card.card_color_2, match:"green") then "G"
+			 	else "")
+			 else
+			 	(if contains(card.card_color, match:"multicolor") or contains(card.card_color, match:"hybrid") or contains(card.card_color_2, match:"multicolor") or contains(card.card_color_2, match:"hybrid") then "M"
+			 	else if contains(card.card_color, match:"white") or contains(card.card_color_2, match:"white") then "W"
+				else if contains(card.card_color, match:"blue") or contains(card.card_color_2, match:"blue") then "U"
+				else if contains(card.card_color, match:"black") or contains(card.card_color_2, match:"black") then "B"
+				else if contains(card.card_color, match:"red") or contains(card.card_color_2, match:"red") then "R"
+				else if contains(card.card_color, match:"green") or contains(card.card_color_2, match:"green") then "G"
+			 	else "")
+			 )
+			+"\</color>"
+		# Mana Cost
+		+"\n "+"\<manacost>"+card.casting_cost
+		 +(if card.casting_cost_2 != "" then " // "+card.casting_cost_2)
+		 +"\</manacost>"
+		# Type
+		+"\n "+"\<type>"+replace(card.type, match:"—", replace:"-")+" // "+replace(card.type_2, match:"—", replace:"-")+"\</type>"
+		# P/T
+		+(if contains(card.type, match:"Creature") or contains(card.type_2, match:"Creature") then "\n ")
+			+(if contains(card.type, match:"Creature") or contains(card.type_2, match:"Creature") then "\<pt>")
+			+(if contains(card.type, match:"Creature") then card.pt)
+			+(if contains(card.type, match:"Creature") and contains(card.type_2, match:"Creature") then " // ")
+			+(if contains(card.type_2, match:"Creature") then card.pt_2)
+			+(if contains(card.type, match:"Creature") or contains(card.type_2, match:"Creature") then "\</pt>")
+		# Tablerow
+		+"\n "+"\<tablerow>"
+			+(if contains(card.type, match:"Instant") or contains(card.type, match:"Sorcery") or contains(card.type_2, match:"Instant") or contains(card.type_2, match:"Sorcery") then "3"
+			 else if contains(card.type, match:"Creature") or contains(card.type_2, match:"Creature") then "2"
+			 else if contains(card.type, match:"Land") or contains(card.type_2, match:"Land")  then "0"
+			 else "1")
+			+"\</tablerow>"
+		# Rules Text
+		+"\n "+"\<text>"+card.rule_text+"\n--- \n"+card.rule_text_2+"\</text>"
+		+"\n"+"\</card>"
+	}
+	write_double := {
+		"\n"+"\<card>"
+		# Name
+		+"\n "+"\<name>"+remove_commas(card_name())
+		#+" | ("+remove_commas(card.name_2)+")"
+		+"\</name>"
+		# Set
+		+"\n "+"\<set picURL=\""+options.images_Location+"/"+remove_commas(card_name())+".full.jpg\" picURLHq=\"\" picURLSt=\"\">"+options.set_Code+"\</set>"
+		# Color
+		+"\n "+"\<color>"
+			+(if contains(card.card_color, match:"multicolor") or contains(card.card_color, match:"hybrid") then "M"
+			 else if contains(card.card_color, match:"white") then "W"
+			 else if contains(card.card_color, match:"blue") then "U"
+			 else if contains(card.card_color, match:"black") then "B"
+			 else if contains(card.card_color, match:"red") then "R"
+			 else if contains(card.card_color, match:"green") then "G"
+			 else "")
+			+"\</color>"
+		# Name of the related card
+		+"\n "+"\<related>"+remove_commas(card.name_2)+"\</related>"
+		# Mana Cost
+		+"\n "+"\<manacost>"+card.casting_cost+"\</manacost>"
+		# Type
+		+"\n "+"\<type>"+replace(card.type, match:"—", replace:"-")+"\</type>"
+		# P/T
+		+(if contains(card.type, match:"Creature") then "\n ")
+			+(if contains(card.type, match:"Creature") then "\<pt>")
+			+(if contains(card.type, match:"Creature") then card.pt)
+			+(if contains(card.type, match:"Creature") then "\</pt>")
+		# Tablerow
+		+"\n "+"\<tablerow>"
+			+(if contains(card.type, match:"Instant") or contains(card.type, match:"Sorcery") then "3"
+			 else if contains(card.type, match:"Creature") then "2"
+			 else if contains(card.type, match:"Land") then "0"
+			 else "1")
+			+"\</tablerow>"
+		# Rules Text
+		+"\n "+"\<text>"+(if card.special_text != "" then card.special_text else card.rule_text)
+		+"\n---\n(Back): "+remove_commas(card.name_2)+"\</text>"
+		+"\n"+"\</card>"
+		+"\n"+"\<card>"
+		# Name II
+		+"\n "+"\<name>"
+		#+"("+remove_commas(card_name())+") | "
+		+remove_commas(card.name_2)
+		+"\</name>"
+		# Set II
+		+"\n "+"\<set picURL=\""+options.images_Location+"/"+remove_commas(card_name())+".full.jpg\" picURLHq=\"\" picURLSt=\"\">"+options.set_Code+"\</set>"
+		# Color II
+		+"\n "+"\<color>"
+			+(if contains(card.card_color_2, match:"multicolor") or contains(card.card_color_2, match:"hybrid") then "M"
+			 else if contains(card.card_color_2, match:"white") then "W"
+			 else if contains(card.card_color_2, match:"blue") then "U"
+			 else if contains(card.card_color_2, match:"black") then "B"
+			 else if contains(card.card_color_2, match:"red") then "R"
+			 else if contains(card.card_color_2, match:"green") then "G"
+			 else "")
+			+"\</color>"
+		# Mana Cost II
+		+"\n "+"\<manacost>"+card.casting_cost_2+"\</manacost>"
+		# Type II
+		+"\n "+"\<type>"+replace(card.type_2, match:"—", replace:"-")+"\</type>"
+		# P/T II
+		+(if contains(card.type_2, match:"Creature") then "\n ")
+			+(if contains(card.type_2, match:"Creature") then "\<pt>")
+			+(if contains(card.type_2, match:"Creature") then card.pt_2)
+			+(if contains(card.type_2, match:"Creature") then "\</pt>")
+		# Tablerow II
+		+"\n "+"\<tablerow>"
+			+(if contains(card.type_2, match:"Instant") or contains(card.type_2, match:"Sorcery") then "3"
+			 else if contains(card.type_2, match:"Creature") then "2"
+			 else if contains(card.type_2, match:"Land") then "0"
+			 else "1")
+			+"\</tablerow>"
+		# Rules Text II
+		+"\n "+"\<text>"+(if card.special_text_2 != "" then card.special_text_2 else card.rule_text_2)
+		+"\n---\n(Front): "+remove_commas(card_name())+"\</text>"
+		+"\n"+"\</card>"		
+	}
+	
+	# Count the number of paragraphs to detect number of walker abilities.
+	paragraph_count := replace@(match:"\n", replace:"•")+
+		filter_text@(match:"•")
+		
+	write_walker := {
+		"\n"+"\<card>"
+		# Name
+		+"\n "+"\<name>"+remove_commas(card_name())+"\</name>"
+		# Set
+		+"\n "+"\<set picURL=\""+options.images_Location+"/"+remove_commas(card_name())+".full.jpg\" picURLHq=\"\" picURLSt=\"\">"+options.set_Code+"\</set>"
+		# Color
+		+"\n "+"\<color>"
+			+(if contains(card.card_color, match:"multicolor") or contains(card.card_color, match:"hybrid") then "M"
+			 else if contains(card.card_color, match:"white") then "W"
+			 else if contains(card.card_color, match:"blue") then "U"
+			 else if contains(card.card_color, match:"black") then "B"
+			 else if contains(card.card_color, match:"red") then "R"
+			 else if contains(card.card_color, match:"green") then "G"
+			 else "")
+			+"\</color>"
+		# Mana Cost
+		+"\n "+"\<manacost>"+card.casting_cost+"\</manacost>"
+		# Type
+		+"\n "+"\<type>"+replace(card.type, match:"—", replace:"-")+"\</type>"
+		# Loyalty
+		+"\n "+"\<loyalty>"+card.loyalty+"\</loyalty>"
+		# Tablerow
+		+"\n "+"\<tablerow>"+"1"+"\</tablerow>"
+		# Rules Text
+		+"\n "+"\<text>"
+		+(if card.special_text or else "" != "" then card.special_text else 
+			card.loyalty_cost_1
+			+(if card.loyalty_cost_1 !="" then ": ")
+			+split_text(match:"\n", card.rule_text).0
+		+(if contains(paragraph_count(card.rule_text), match:"•") then "\n")
+			+card.loyalty_cost_2
+			+(if card.loyalty_cost_2 !="" then ": ")
+			+(if contains(paragraph_count(card.rule_text), match:"•") then split_text(match:"\n", card.rule_text).1)
+		+(if contains(paragraph_count(card.rule_text), match:"••") then "\n")
+			+card.loyalty_cost_3
+			+(if card.loyalty_cost_3 !="" then ": ")
+			+(if contains(paragraph_count(card.rule_text), match:"••") then split_text(match:"\n", card.rule_text).2)
+		+(if contains(paragraph_count(card.rule_text), match:"•••") then "\n")
+			+card.loyalty_cost_4
+			+(if card.loyalty_cost_4 !="" then ": ")
+			+(if contains(paragraph_count(card.rule_text), match:"•••") then split_text(match:"\n", card.rule_text).3))
+		+"\</text>"
+		+"\n"+"\</card>"
+	}
+	write_double_walker := {
+		"\n"+"\<card>"
+		# Name
+		+"\n "+"\<name>"+remove_commas(card_name())
+		#+" | ("+remove_commas(card.name_2)+")"
+		+"\</name>"
+		# Set
+		+"\n "+"\<set picURL=\""+options.images_Location+"/"+remove_commas(card_name())+".full.jpg\" picURLHq=\"\" picURLSt=\"\">"+options.set_Code+"\</set>"
+		# Color
+		+"\n "+"\<color>"
+			+(if contains(card.card_color, match:"multicolor") or contains(card.card_color, match:"hybrid") then "M"
+			 else if contains(card.card_color, match:"white") then "W"
+			 else if contains(card.card_color, match:"blue") then "U"
+			 else if contains(card.card_color, match:"black") then "B"
+			 else if contains(card.card_color, match:"red") then "R"
+			 else if contains(card.card_color, match:"green") then "G"
+			 else "")
+			+"\</color>"
+		# Name of the related card
+		+"\n "+"\<related>"+remove_commas(card.name_2)+"\</related>"
+		# Mana Cost
+		+"\n "+"\<manacost>"+card.casting_cost+"\</manacost>"
+		# Type
+		+"\n "+"\<type>"+replace(card.type, match:"—", replace:"-")+"\</type>"
+		# Loyalty
+		+(if contains(card.type, match:"Planeswalker") then "\n "+"\<loyalty>"+card.loyalty+"\</loyalty>")
+		# P/T
+		+(if contains(card.type, match:"Creature") then "\n "+"\<pt>"+card.pt+"\</pt>")
+		# Tablerow
+		+"\n "+"\<tablerow>"
+			+(if contains(card.type_2, match:"Instant") or contains(card.type_2, match:"Sorcery") then "3"
+			 else if contains(card.type_2, match:"Creature") then "2"
+			 else if contains(card.type_2, match:"Land") then "0"
+			 else "1")
+			+"\</tablerow>"
+		# Rules Text
+		+"\n "+"\<text>"
+		+(if card.special_text or else "" != "" then card.special_text else 
+			card.loyalty_cost_1
+			+(if card.loyalty_cost_1 !="" then ": ")
+			+split_text(match:"\n", card.rule_text).0
+		+(if contains(paragraph_count(card.rule_text), match:"•") then "\n")
+			+card.loyalty_cost_2
+			+(if card.loyalty_cost_2 !="" then ": ")
+			+(if contains(paragraph_count(card.rule_text), match:"•") then split_text(match:"\n", card.rule_text).1)
+		+(if contains(paragraph_count(card.rule_text), match:"••") then "\n")
+			+card.loyalty_cost_3
+			+(if card.loyalty_cost_3 !="" then ": ")
+			+(if contains(paragraph_count(card.rule_text), match:"••") then split_text(match:"\n", card.rule_text).2)
+		+(if contains(paragraph_count(card.rule_text), match:"•••") then "\n"))
+		+"\n---\n(Back): "+remove_commas(card.name_2)+"\</text>"
+		+"\n"+"\</card>"
+		+"\n"+"\<card>"
+		# Name II
+		+"\n "+"\<name>"
+		#+remove_commas(card_name())+") | "
+		+remove_commas(card.name_2)+"\</name>"
+		# Set II
+		+"\n "+"\<set picURL=\""+options.images_Location+"/"+remove_commas(card_name())+".full.jpg\" picURLHq=\"\" picURLSt=\"\">"+options.set_Code+"\</set>"
+		# Color II
+		+"\n "+"\<color>"
+			+(if contains(card.card_color_2, match:"multicolor") or contains(card.card_color_2, match:"hybrid") then "M"
+			 else if contains(card.card_color_2, match:"white") then "W"
+			 else if contains(card.card_color_2, match:"blue") then "U"
+			 else if contains(card.card_color_2, match:"black") then "B"
+			 else if contains(card.card_color_2, match:"red") then "R"
+			 else if contains(card.card_color_2, match:"green") then "G"
+			 else "")
+			+"\</color>"
+		# Mana Cost II
+		+"\n "+"\<manacost>"+card.casting_cost_2+"\</manacost>"
+		# Type II
+		+"\n "+"\<type>"+replace(card.type_2, match:"—", replace:"-")+"\</type>"
+		# Loyalty II
+		+(if contains(card.type_2, match:"Planeswalker") then "\n "+"\<loyalty>"+card.loyalty_2+"\</loyalty>")
+		# P/T II
+		+(if contains(card.type_2, match:"Creature") then "\n "+"\<pt>"+card.pt_2+"\</pt>")
+		# Tablerow II
+		+"\n "+"\<tablerow>"
+			+(if contains(card.type_2, match:"Instant") or contains(card.type_2, match:"Sorcery") then "3"
+			 else if contains(card.type_2, match:"Creature") then "2"
+			 else if contains(card.type_2, match:"Land") then "0"
+			 else "1")
+			+"\</tablerow>"
+		# Rules Text II
+		+"\n "+"\<text>"
+		+(if card.special_text_2 or else "" != "" then card.special_text_2 else 
+			card.loyalty_cost_4
+			+(if card.loyalty_cost_4 !="" then ": ")
+			+split_text(match:"\n", card.rule_text_2).0
+		+(if contains(paragraph_count(card.rule_text_2), match:"•") then "\n")
+			+card.loyalty_cost_5
+			+(if card.loyalty_cost_5 !="" then ": ")
+			+(if contains(paragraph_count(card.rule_text_2), match:"•") then split_text(match:"\n", card.rule_text_2).1)
+		+(if contains(paragraph_count(card.rule_text_2), match:"••") then "\n")
+			+card.loyalty_cost_6
+			+(if card.loyalty_cost_6 !="" then ": ")
+			+(if contains(paragraph_count(card.rule_text_2), match:"••") then split_text(match:"\n", card.rule_text_2).2)
+		+(if contains(paragraph_count(card.rule_text_2), match:"•••") then "\n"))
+		+"\n---\n(Front): "+remove_commas(card_name())+"\</text>"
+		+"\n"+"\</card>"	
+	}
+	write_sparker := {
+		"\n"+"\<card>"
+		# Name
+		+"\n "+"\<name>"+remove_commas(card_name())
+		#+" | ("+remove_commas(card.name_2)+")"
+		+"\</name>"
+		# Set
+		+"\n "+"\<set picURL=\""+options.images_Location+"/"+remove_commas(card_name())+".full.jpg\" picURLHq=\"\" picURLSt=\"\">"+options.set_Code+"\</set>"
+		# Color
+		+"\n "+"\<color>"
+			+(if contains(card.card_color, match:"multicolor") or contains(card.card_color, match:"hybrid") then "M"
+			 else if contains(card.card_color, match:"white") then "W"
+			 else if contains(card.card_color, match:"blue") then "U"
+			 else if contains(card.card_color, match:"black") then "B"
+			 else if contains(card.card_color, match:"red") then "R"
+			 else if contains(card.card_color, match:"green") then "G"
+			 else "")
+			+"\</color>"
+		# Name of the related card
+		+"\n "+"\<related>"+remove_commas(card.name_2)+"\</related>"
+		# Mana Cost
+		+"\n "+"\<manacost>"+card.casting_cost+"\</manacost>"
+		# Type
+		+"\n "+"\<type>"+replace(card.type, match:"—", replace:"-")+"\</type>"
+		# P/T
+		+(if contains(card.type, match:"Creature") then "\n ")
+			+(if contains(card.type, match:"Creature") then "\<pt>")
+			+(if contains(card.type, match:"Creature") then card.pt)
+			+(if contains(card.type, match:"Creature") then "\</pt>")
+		# Tablerow
+		+"\n "+"\<tablerow>"
+			+(if contains(card.type, match:"Instant") or contains(card.type, match:"Sorcery") then "3"
+			 else if contains(card.type, match:"Creature") then "2"
+			 else if contains(card.type, match:"Land") then "0"
+			 else "1")
+			+"\</tablerow>"
+		# Rules Text
+		+"\n "+"\<text>"+(if card.special_text != "" then card.special_text else card.rule_text)
+		+"\n---\n(Back): "+remove_commas(card.name_2)+"\</text>"
+		+"\n"+"\</card>"
+		+"\n"+"\<card>"
+		# Name II
+		+"\n "+"\<name>"
+		#+remove_commas(card_name())+") | "
+		+remove_commas(card.name_2)+"\</name>"
+		# Set II
+		+"\n "+"\<set picURL=\""+options.images_Location+"/"+remove_commas(card_name())+".full.jpg\" picURLHq=\"\" picURLSt=\"\">"+options.set_Code+"\</set>"
+		# Color II
+		+"\n "+"\<color>"
+			+(if contains(card.card_color_2, match:"multicolor") or contains(card.card_color_2, match:"hybrid") then "M"
+			 else if contains(card.card_color_2, match:"white") then "W"
+			 else if contains(card.card_color_2, match:"blue") then "U"
+			 else if contains(card.card_color_2, match:"black") then "B"
+			 else if contains(card.card_color_2, match:"red") then "R"
+			 else if contains(card.card_color_2, match:"green") then "G"
+			 else "")
+			+"\</color>"
+		# Mana Cost II
+		+"\n "+"\<manacost>"+card.casting_cost_2+"\</manacost>"
+		# Type II
+		+"\n "+"\<type>"+replace(card.type_2, match:"—", replace:"-")+"\</type>"
+		# Loyalty II
+		+(if contains(card.type_2, match:"Planeswalker") then "\n "+"\<loyalty>"+card.loyalty_2+"\</loyalty>")
+		# P/T II
+		+(if contains(card.type_2, match:"Creature") then "\n "+"\<pt>"+card.pt_2+"\</pt>")
+		# Tablerow II
+		+"\n "+"\<tablerow>"
+			+(if contains(card.type_2, match:"Instant") or contains(card.type_2, match:"Sorcery") then "3"
+			 else if contains(card.type_2, match:"Creature") then "2"
+			 else if contains(card.type_2, match:"Land") then "0"
+			 else "1")
+			+"\</tablerow>"
+		# Rules Text II
+		+"\n "+"\<text>"
+		+(if card.special_text_2 or else "" != "" then card.special_text_2 else 
+			card.loyalty_cost_4
+			+(if card.loyalty_cost_4 !="" then ": ")
+			+split_text(match:"\n", card.rule_text_2).0
+		+(if contains(paragraph_count(card.rule_text_2), match:"•") then "\n")
+			+card.loyalty_cost_5
+			+(if card.loyalty_cost_5 !="" then ": ")
+			+(if contains(paragraph_count(card.rule_text_2), match:"•") then split_text(match:"\n", card.rule_text_2).1)
+		+(if contains(paragraph_count(card.rule_text_2), match:"••") then "\n")
+			+card.loyalty_cost_6
+			+(if card.loyalty_cost_6 !="" then ": ")
+			+(if contains(paragraph_count(card.rule_text_2), match:"••") then split_text(match:"\n", card.rule_text_2).2)
+		+(if contains(paragraph_count(card.rule_text_2), match:"•••") then "\n"))
+		+"\n---\n(Front): "+remove_commas(card_name())+"\</text>"
+		+"\n"+"\</card>"	
+	}
+	write_sacrificer := {
+		"\n"+"\<card>"
+		# Name
+		+"\n "+"\<name>"+remove_commas(card_name())
+		#+" | ("+remove_commas(card.name_2)+")"
+		+"\</name>"
+		# Set
+		+"\n "+"\<set picURL=\""+options.images_Location+"/"+remove_commas(card_name())+".full.jpg\" picURLHq=\"\" picURLSt=\"\">"+options.set_Code+"\</set>"
+		# Color
+		+"\n "+"\<color>"
+			+(if contains(card.card_color, match:"multicolor") or contains(card.card_color, match:"hybrid") then "M"
+			 else if contains(card.card_color, match:"white") then "W"
+			 else if contains(card.card_color, match:"blue") then "U"
+			 else if contains(card.card_color, match:"black") then "B"
+			 else if contains(card.card_color, match:"red") then "R"
+			 else if contains(card.card_color, match:"green") then "G"
+			 else "")
+			+"\</color>"
+		# Name of the related card
+		+"\n "+"\<related>"+remove_commas(card.name_2)+"\</related>"
+		# Mana Cost
+		+"\n "+"\<manacost>"+card.casting_cost+"\</manacost>"
+		# Type
+		+"\n "+"\<type>"+replace(card.type, match:"—", replace:"-")+"\</type>"
+		# Loyalty
+		+(if contains(card.type, match:"Planeswalker") then "\n "+"\<loyalty>"+card.loyalty+"\</loyalty>")
+		# P/T
+		+(if contains(card.type, match:"Creature") then "\n "+"\<pt>"+card.pt+"\</pt>")
+		# Tablerow
+		+"\n "+"\<tablerow>"
+			+(if contains(card.type_2, match:"Instant") or contains(card.type_2, match:"Sorcery") then "3"
+			 else if contains(card.type_2, match:"Creature") then "2"
+			 else if contains(card.type_2, match:"Land") then "0"
+			 else "1")
+			+"\</tablerow>"
+		# Rules Text
+		+"\n "+"\<text>"
+		+(if card.special_text or else "" != "" then card.special_text else 
+			card.loyalty_cost_1
+			+(if card.loyalty_cost_1 !="" then ": ")
+			+split_text(match:"\n", card.rule_text).0
+		+(if contains(paragraph_count(card.rule_text), match:"•") then "\n")
+			+card.loyalty_cost_2
+			+(if card.loyalty_cost_2 !="" then ": ")
+			+(if contains(paragraph_count(card.rule_text), match:"•") then split_text(match:"\n", card.rule_text).1)
+		+(if contains(paragraph_count(card.rule_text), match:"••") then "\n")
+			+card.loyalty_cost_3
+			+(if card.loyalty_cost_3 !="" then ": ")
+			+(if contains(paragraph_count(card.rule_text), match:"••") then split_text(match:"\n", card.rule_text).2)
+		+(if contains(paragraph_count(card.rule_text), match:"•••") then "\n"))
+		+"\n---\n(Back): "+remove_commas(card.name_2)+"\</text>"
+		+"\n"+"\</card>"
+		+"\n"+"\<card>"
+		# Name II
+		+"\n "+"\<name>"
+		#+"("+remove_commas(card_name())+") | "
+		+remove_commas(card.name_2)
+		+"\</name>"
+		# Set II
+		+"\n "+"\<set picURL=\""+options.images_Location+"/"+remove_commas(card_name())+".full.jpg\" picURLHq=\"\" picURLSt=\"\">"+options.set_Code+"\</set>"
+		# Color II
+		+"\n "+"\<color>"
+			+(if contains(card.card_color_2, match:"multicolor") or contains(card.card_color_2, match:"hybrid") then "M"
+			 else if contains(card.card_color_2, match:"white") then "W"
+			 else if contains(card.card_color_2, match:"blue") then "U"
+			 else if contains(card.card_color_2, match:"black") then "B"
+			 else if contains(card.card_color_2, match:"red") then "R"
+			 else if contains(card.card_color_2, match:"green") then "G"
+			 else "")
+			+"\</color>"
+		# Mana Cost II
+		+"\n "+"\<manacost>"+card.casting_cost_2+"\</manacost>"
+		# Type II
+		+"\n "+"\<type>"+replace(card.type_2, match:"—", replace:"-")+"\</type>"
+		# P/T II
+		+(if contains(card.type_2, match:"Creature") then "\n ")
+			+(if contains(card.type_2, match:"Creature") then "\<pt>")
+			+(if contains(card.type_2, match:"Creature") then card.pt_2)
+			+(if contains(card.type_2, match:"Creature") then "\</pt>")
+		# Tablerow II
+		+"\n "+"\<tablerow>"
+			+(if contains(card.type_2, match:"Instant") or contains(card.type_2, match:"Sorcery") then "3"
+			 else if contains(card.type_2, match:"Creature") then "2"
+			 else if contains(card.type_2, match:"Land") then "0"
+			 else "1")
+			+"\</tablerow>"
+		# Rules Text II
+		+"\n "+"\<text>"+(if card.special_text_2 != "" then card.special_text_2 else card.rule_text_2)
+		+"\n---\n(Front): "+remove_commas(card_name())+"\</text>"
+		+"\n"+"\</card>"	
+	}
+	write_leveler := {
+		"\n"+"\<card>"
+		# Name
+		+"\n "+"\<name>"+remove_commas(card_name())+"\</name>"
+		# Set
+		+"\n "+"\<set picURL=\""+options.images_Location+"/"+remove_commas(card_name())+".full.jpg\" picURLHq=\"\" picURLSt=\"\">"+options.set_Code+"\</set>"
+		# Color
+		+"\n "+"\<color>"
+			+(if contains(card.card_color, match:"multicolor") or contains(card.card_color, match:"hybrid") then "M"
+			 else if contains(card.card_color, match:"white") then "W"
+			 else if contains(card.card_color, match:"blue") then "U"
+			 else if contains(card.card_color, match:"black") then "B"
+			 else if contains(card.card_color, match:"red") then "R"
+			 else if contains(card.card_color, match:"green") then "G"
+			 else "")
+			+"\</color>"
+		# Mana Cost
+		+"\n "+"\<manacost>"+card.casting_cost+"\</manacost>"
+		# Type
+		+"\n "+"\<type>"+replace(card.type, match:"—", replace:"-")+"\</type>"
+		# P/T
+		+(if contains(card.type, match:"Creature") then "\n ")
+			+(if contains(card.type, match:"Creature") then "\<pt>")
+			+(if contains(card.type, match:"Creature") then card.pt)
+			+(if contains(card.type, match:"Creature") then "\</pt>")
+		# Tablerow
+		+"\n "+"\<tablerow>"
+			+(if contains(card.type, match:"Instant") or contains(card.type, match:"Sorcery") then "3"
+			 else if contains(card.type, match:"Creature") then "2"
+			 else if contains(card.type, match:"Land") then "0"
+			 else "1")
+			+"\</tablerow>"
+		# Rules Text
+		+"\n "+"\<text>"+ if card.special_text != "" then card.special_text else ""
+		#Level I
+		+card.rule_text
+		# Level II
+		+"\nLEVEL " + card.level_1
+		 +(if card.pt_2 != "" then "\n"+card.pt_2)
+		 +"\n"+card.rule_text_2
+		# Level III
+		+"\nLEVEL " + card.level_2
+		 +(if card.pt_3 != "" then "\n"+card.pt_3)
+		 +"\n"+card.rule_text_3
+		+"\</text>"
+		+"\n"+"\</card>"
+	}
+	
+	write_card := { if token_export() then ""
+		else if contains(card.shape, match:"double") and contains(card.type, match:"Planeswalker") and contains(card.type_2, match:"Planeswalker") then write_double_walker()
+		else if contains(card.shape, match:"double") and card.loyalty_2 != "" then write_sparker()
+		else if contains(card.shape, match:"double") and card.loyalty != "" then write_sacrificer()
+		else if contains(card.shape, match:"double") then write_double()
+		else if card.name_2 != "" then write_flip()
+		else if card.loyalty != "" then write_walker()
+		else if contains(card.shape, match:"leveler") then write_leveler()
+		else write_normal()
+	}
+	write_tokens := { if token_export() then write_token()}
+	write_images := for each card in sort_list(cards, order_by: {card.card_number}) do write_image_file(card, directory: "{options.set_Code}", file:"{remove_commas(card_name())+(if token_export() and options.append_set_code then " " + options.set_Code else "")}.full.jpg", width: (if contains(card.shape, match:"double") then 752 else 375), height: 523)
+	write_cards := to_text(for each card in sort_list(cards, order_by: {input.card_number}) do write_card())
+	write_all_tokens := to_text(for each card in sort_list(cards, order_by: {input.card_number}) do write_tokens())
+	write_text_file(file:"tokens" + options.set_Code + ".xml", to_string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<cockatrice_carddatabase version=\"3\">\n<cards>\n"+write_all_tokens+"\n\n</cards>\n</cockatrice_carddatabase>"))
+	to_string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<cockatrice_carddatabase version=\"3\">\n<sets>\n<set>\n<name>"+options.set_Code+"</name>\n<longname>"+set.title+"</longname>\n</set>\n</sets>\n<cards>\n"+write_cards+"\n\n</cards>\n</cockatrice_carddatabase>")
