@@ -4,7 +4,7 @@ short name: Godzilla Saga
 full name: M15 Godzilla Saga
 installer group: magic/m15 style/sagas
 icon: card-sample.png
-position hint: 010
+position hint: 018
 
 version: 2020-05-10
 depends on:
