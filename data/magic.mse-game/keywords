@@ -341,7 +341,7 @@ keyword:
 	keyword: Storm
 	match: Storm
 	mode: expert
-	reminder: When you cast this spell, copy it for each spell cast before it this turn.{ if is_targeted() then " You may choose new targets for the copies." }
+	reminder: When you cast this spell, copy it for each spell cast before it this turn.{ if is_targeted() then " You may choose new targets for the copies." }{if not is_spell(card.card_type) then " Copies become tokens."}
 # Mirrodin
 keyword:
 	keyword: Affinity for
@@ -647,9 +647,9 @@ keyword:
 	reminder: This card is every creature type.
 keyword:
 	keyword: Hideaway
-	match: Hideaway
+	match: Hideaway <atom-param>number</atom-param>
 	mode: expert
-	reminder: {this_or_that("land", upper:true)} enters the battlefield tapped. When it does, look at the top four cards of your library, exile one face down, then put the rest on the bottom of your library.
+	reminder: When {this_or_that("type", upper:false)} enters the battlefield, look at the top {english_number_multiple(param1)} card(s) of your library, exile one face down, then put the rest on the bottom of your library.
 # Morningtide
 keyword:
 	keyword: Prowl
@@ -1378,7 +1378,7 @@ keyword:
 	keyword: Amass
 	match: Amass <atom-param>number</atom-param>
 	mode: action
-	reminder: Put {english_number_a(param1)} +1/+1f counter(s) on an Army you control. If you don't control one, create a 0/0 black Zombie Army creature token first.
+	reminder: Put {english_number_a(param1)} +1/+1 counter(s) on an Army you control. If you don't control one, create a 0/0 black Zombie Army creature token first.
 #Throne of Eldraine
 keyword:
 	keyword: Adamant
@@ -1411,7 +1411,7 @@ keyword:
 	keyword: Companion
 	match: Companion — <atom-param>name</atom-param>
 	mode: expert
-	reminder: If this card is your chosen companion, you may cast it once from outside the game.
+	reminder: If this card is your chosen companion, you may put it into your hand from outside the game for [3] any time you could cast a sorcery.
 #Magic 2021
 keyword:
 	keyword: Mill
@@ -1553,3 +1553,57 @@ keyword:
 	match: Compleated
 	mode: expert
 	reminder: {phy_reminder(card.casting_cost)} If life was paid, this planeswalker enters with two fewer loyalty counters.
+# Streets of New Capenna
+keyword:
+	keyword: Casualty
+	match: Casualty <atom-param>number</atom-param>
+	mode: expert
+	reminder: As you cast this spell, you may sacrifice a creature with power {param1}{if param1 == "X" then "." else " or greater."} When you do, copy this spell.
+keyword:
+	keyword: Connive
+	match: connive
+	mode: action
+	reminder: To have a creature connive, draw a card, then discard a card. If you discarded a nonland card, put a +1/+1 counter on that creature.
+keyword:
+	keyword: Connives
+	match: connives
+	mode: action
+	reminder: Draw a card, then discard a card. If you discarded a nonland card, put a +1/+1 counter on {this_or_that("creature")}.
+keyword:
+	keyword: Connives N
+	match: connives <atom-param>number</atom-param>
+	mode: action
+	reminder: Draw {english_number_a(param1)} card(s), then discard {english_number_a(param1)} card(s). Put a +1/+1 counter on {this_or_that("creature")} for each nonland card discarded this way.
+keyword:
+	keyword: Blitz
+	match: Blitz <atom-param>cost</atom-param>
+	mode: expert
+	reminder: If you cast this spell for its blitz cost, it gains haste and "When this creature dies, draw a card". Sacrifice it at the beginning of the next end step.
+keyword:
+	keyword: Shield counter
+	match: shield counter
+	mode: action
+	reminder: If it would be dealt damage or destroyed, remove a shield counter from it instead.
+keyword:
+	keyword: Alliance
+	match: Alliance
+	mode: pseudo
+	rules: Alliance — Whenever another creature enters the battlefield under your control, [effect].
+# Secret Lair
+keyword:
+	keyword: Friends forever
+	match: Friends forever
+	mode: expert
+	reminder: You can have two commanders if they both have friends forever.
+# Commander Legends Battle for Baldur's Gate
+keyword:
+	keyword: Choose a Background
+	match: Choose a Background
+	mode: expert
+	reminder: You can have a Background as a second commander.
+# Warhammer 40k
+keyword:
+	keyword: Squad
+	match: Squad <atom-param>cost</atom-param>
+	mode: expert
+	reminder: As an additional cost to cast this spell, you may pay {param1} any number of times. When this creature enters the battlefield, create that many tokens that are copies of it.
