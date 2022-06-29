@@ -22,7 +22,6 @@ card height: 523
 card dpi: 150
 ############################################################## Extra scripts
 init script:
-	
 	template      := { input + "card.jpg" }
 	land_template := { input + "card.jpg" }
 	
