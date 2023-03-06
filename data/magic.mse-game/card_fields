@@ -1,7 +1,6 @@
 ﻿############################################################## Card fields
 
 ############################# Automatic fields
-
 # The 'shape' of the card (flip, split, etc.)
 card field:
 	type: choice
@@ -26,7 +25,7 @@ card field:
 	choice: checklist
 	choice: emblem
 	choice: masterpiece
-	choice: nightbreak
+	choice: nightbreak 
 	choice: plane card
 	choice: saga
 	script: 
@@ -130,15 +129,19 @@ card field:
 	card list alignment: right
 	card list width: 50
 	card list name: CC
+	show statistics: false
 	description: The casting cost of the card
 card field:
 	type: choice
 	name: card symbol
 	position hint: 10
-	icon: stats/card_symbol.png
+	icon: stats/tombstone.png
 	choice: none
 	choice: tombstone
-	description: Symbol for this card (tombstone)
+	choice: alchemy
+	choice: alchemy old
+	show statistics: false
+	description: Symbol for this card
 card field:
 	type: choice
 	name: type symbol
@@ -218,15 +221,16 @@ card field:
 card field:
 	type: text
 	name: super type
-	icon: stats/card_type.png
+	icon: stats/type.png
 	position hint: 30
 	script: super_type_filter(value)
 	show statistics: false
 card field:
 	type: text
 	name: sub type
-	icon: stats/creature_type.png
+	icon: stats/type.png
 	position hint: 31
+	show statistics: false
 	script: sub_type_filter(value, type:card.super_type)
 card field:
 	type: text
@@ -307,6 +311,7 @@ card field:
 	icon: stats/watermark.png
 	position hint: 200
 	include file: /magic-watermarks.mse-include/watermark-names
+	show statistics: false
 	description: A watermark for below the textbox, this can be a big mana symbol used on basic lands, or a guild symbol
 ###############################Leveler textboxes
 card field:
@@ -409,8 +414,9 @@ card field:
 card field:
 	type: text
 	name: loyalty
-	icon: stats/toughness.png
+	icon: stats/loyalty.png
 	position hint: 59
+	show statistics: false
 	description: The initial loyalty of a planeswalker
 card field:
 	type: text
@@ -499,7 +505,7 @@ card field:
 	name: set code
 	editable: false
 	save value: false
-	script: (if is_masterpiece() then set.masterpiece_set_code else set.set_code) + " • " + set.set_language
+	script: (if is_masterpiece() then set.masterpiece_set_code else set.set_code) + (if set.set_language != "" then " • " + set.set_language else "")
 	show statistics: false
 card field:
 	type: text
@@ -541,14 +547,16 @@ card field:
 	description: Copyright of this card and cardnumber, the default value can be changed on the 'set info' tab
 card field:
 	type: choice
-	name: stamp
+	name: card stamp
 	choice: standard
 	choice: none
 	choice: acorn
 	choice: universes beyond
+	choice: alchemy
+	choice: alchemy old
 	choice: custom
-	choice: custom color
 	default: set.default_stamp
+	show statistics: false
 	description: The stamp style for this card.
 ############################################################## Duplicate fields (split/flip cards)
 # Based on flip templates by Wolfwood
@@ -558,7 +566,7 @@ card field:
 card field:
 	type: multiple choice
 	name: card color 2
-	icon: stats/card_color.png
+	icon: stats/color.png
 	empty choice: colorless
 	choice: white
 	choice: blue
@@ -640,11 +648,13 @@ card field:
 card field:
 	type: choice
 	name: card symbol 2
-	icon: stats/card_symbol.png
+	icon: stats/tombstone.png
 	choice: none
 	choice: tombstone
+	choice: alchemy
+	choice: alchemy old
 	show statistics: false
-	description: The card symbol of the card (Tombstone)
+	description: The card symbol of the card
 card field:
 	type: choice
 	name: type symbol 2
@@ -703,13 +713,13 @@ card field:
 card field:
 	type: text
 	name: super type 2
-	icon: stats/creature_type.png
+	icon: stats/type.png
 	show statistics: false
 	script: super_type_filter(value)
 card field:
 	type: text
 	name: sub type 2
-	icon: stats/creature_type.png
+	icon: stats/type.png
 	show statistics: false
 	script: sub_type_filter(value, type:card.super_type_2)
 card field:
@@ -729,13 +739,13 @@ card field:
 card field:
 	type: text
 	name: super type 3
-	icon: stats/creature_type.png
+	icon: stats/type.png
 	show statistics: false
 	script: super_type_filter(value)
 card field:
 	type: text
 	name: sub type 3
-	icon: stats/creature_type.png
+	icon: stats/type.png
 	show statistics: false
 	script: sub_type_filter(value, type:card.super_type_3)
 card field:
@@ -897,7 +907,7 @@ card field:
 card field:
 	type: text
 	name: loyalty 2
-	icon: stats/toughness.png
+	icon: stats/loyalty.png
 	show statistics: false
 	description: The initial loyalty of a planeswalker
 card field:
@@ -1009,7 +1019,7 @@ card field:
 	name: set code 2
 	editable: false
 	save value: false
-	script: (if is_masterpiece() then set.masterpiece_set_code else set.set_code) + " • " + set.set_language
+	script: (if is_masterpiece() then set.masterpiece_set_code else set.set_code) + (if set.set_language != "" then " • " + set.set_language else "")
 	show statistics: false
 card field:
 	type: text
