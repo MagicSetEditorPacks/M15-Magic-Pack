@@ -148,10 +148,6 @@ set field:
 	description: Show rarity codes on M15 frames?
 set field:
 	type: boolean
-	name: trim statistics
-	description: Removes tokens, special rarity, and masterpiece rarity from most statistics.
-set field:
-	type: boolean
 	name: curly quotes
 	description: converts quotes to curly quotes.
 set field:
@@ -231,6 +227,28 @@ set field:
 	initial: no
 set field:
 	type: info
+	name: Statistics
+set field:
+	type: boolean
+	name: trim statistics
+	description: Removes special and masterpiece rarity cards from the statistics, as well as tokens, emblems, dungeons, heroes, conspiracies, vanguards, schemes, planes and phenomenons.
+set field:
+	type: text
+	name: filter statistics
+	description: Filter which cards are counted in the statistics. Syntax is: card_field_name_1:"value_1",card_field_name_2:"value_2",etc. Use == for strict equality, use : for contains, use != for not contains. Example: rule_text:"deathtouch", rarity=="common", sub_type!="goblin"
+set field:
+	type: multiple choice
+	name: count secondary faces
+	description: Count the back side or secondary faces of the cards in the statistics?
+	choice: MDFC
+	choice: TDFC
+	choice: Adventure
+	choice: Split
+	choice: Aftermath
+	choice: Flip
+	initial: MDFC, Adventure, Split
+set field:
+	type: info
 	name: Mainframe Template Options
 set field:
 	type: text
@@ -241,14 +259,19 @@ set field:
 	name: use flavor bar
 	description: Enables the flavor bar on Mainframe templates.
 set field:
+	type: text
+	name: last main partition
+	description: Card Number Partitions after this one aren't counted as the main part of the set, ex "301" rather than "301/300" or "301/900". Default is M.
+set field:
 	type: choice
 	name: default stamp
 	choice: standard
 	choice: none
 	choice: acorn
 	choice: universes beyond
+	choice: alchemy
+	choice: alchemy old
 	choice: custom
-	choice: custom color
 	description: The default stamp setup to use. Only works on new cards, not supported on all frames.
 set field:
 	type: text
@@ -342,6 +365,12 @@ default set style:
 			fill color 2:   rgb(58,7,80)
 			border color 1: rgb(255,  255,  255)
 			border color 2: rgb(255,  255,  255)
+		variation:
+			name: invertedcommon
+			border radius: 0.10
+			fill type: solid
+			fill color:   rgb(255,255,255)
+			border color: rgb(0,0,0)
 ##purple
 ##fill color 1:   rgb(224,170,247)
 ##fill color 2:   rgb(58,7,80)
@@ -406,6 +435,9 @@ default set style:
 			fill color:   rgb(255,255,255)
 			border color: rgba(0,0,0,0)
 	automatic reminder text:
+		render style: checklist
+		direction: vertical
+	count secondary faces:
 		render style: checklist
 		direction: vertical
 	sort special rarity:
