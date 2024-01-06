@@ -223,7 +223,7 @@ symbol:
 ###################################################################################### Loyalty Symbols
 symbol:
 	image: empty_loyaltyup_w.png
-	code: ([+][XYZ1-9])
+	code: ([+][XYZ1-9][0-9]?)
 	regex: yes
 	draw text: 1
 	text margin left:   -.10
@@ -239,7 +239,7 @@ symbol:
 	enabled: {white_text()}
 symbol:
 	image: empty_loyaltydown_w.png
-	code: ([-][XYZ1-9])
+	code: ([-][XYZ1-9][0-9]?)
 	regex: yes
 	draw text: 1
 	text margin left:   -.10
@@ -255,7 +255,7 @@ symbol:
 	enabled: {white_text()}
 symbol:
 	image: empty_loyaltynaught_w.png
-	code: [+=]([0-9XYZ])
+	code: [+=]([0-9XYZ][0-9]?)
 	regex: yes
 	draw text: 1
 	text margin left:   -.10
@@ -271,7 +271,7 @@ symbol:
 	enabled: {white_text()}
 symbol:
 	image: empty_loyaltyup.png
-	code: ([+][XYZ1-9])
+	code: ([+][XYZ1-9][0-9]?)
 	regex: yes
 	draw text: 1
 	text margin left:   -.10
@@ -286,7 +286,7 @@ symbol:
 	image font size: 100
 symbol:
 	image: empty_loyaltydown.png
-	code: ([-][XYZ1-9])
+	code: ([-][XYZ1-9][0-9]?)
 	regex: yes
 	draw text: 1
 	text margin left:   -.10
@@ -301,7 +301,7 @@ symbol:
 	image font size: 100
 symbol:
 	image: empty_loyaltynaught.png
-	code: [+=]([0-9XYZ])
+	code: [+=]([0-9XYZ][0-9]?)
 	regex: yes
 	draw text: 1
 	text margin left:   -.10
@@ -319,6 +319,11 @@ symbol:
 	code: phi
 	image: phi.png
 	image font size: 27
+symbol:
+	code: E
+	image: energy_inverse.png
+	image font size: 300
+	enabled: {white_text()}
 symbol:
 	code: E
 	image: energy.png
@@ -357,8 +362,18 @@ symbol:
 ###################################################################################### Chaos Symbol
 symbol:
 	code: chaos
+	image: mana_chaos_inverse.png
+	image font size: 168.75
+	enabled: {white_text()}
+symbol:
+	code: chaos
 	image: mana_chaos.png
 	image font size: 168.75
+symbol:
+	code: A
+	image: mana_chaos_inverse.png
+	image font size: 168.75
+	enabled: {white_text()}
 symbol:
 	code: A
 	image: mana_chaos.png

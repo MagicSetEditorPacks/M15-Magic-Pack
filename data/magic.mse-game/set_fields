@@ -1,4 +1,4 @@
-﻿
+
 ############################################################## Set fields
 
 set field:
@@ -135,6 +135,15 @@ set field:
 	name: automatic card numbers
 	description: Should card numbers be shown on the cards?
 set field:
+	type: choice
+	name: card number style
+	description: What style of automatic card numbers should be used?
+	choice: 0001
+	choice: 001/099
+	choice: 001
+	choice: 1/99
+	choice: 1
+set field:
 	type: text
 	name: card number offsets
 	description: Add this number to the card numbers. Formatted as "start,total"
@@ -146,10 +155,6 @@ set field:
 	type: boolean
 	name: rarity codes
 	description: Show rarity codes on M15 frames?
-set field:
-	type: boolean
-	name: trim statistics
-	description: Removes tokens, special rarity, and masterpiece rarity from most statistics.
 set field:
 	type: boolean
 	name: curly quotes
@@ -189,10 +194,16 @@ set field:
 	choice: English
 	choice: English (British)
 	choice: English (Canadian)
+	choice: Español
 	choice: Français
+	choice: Deutsch
 	choice: Italiano
 	choice: Português do Brasil
-	choice: Russian
+	choice: Русский
+	choice: 日本語
+	choice: 한국어
+	choice: 汉语
+	choice: 漢語
 	initial: English
 set field:
 	type: boolean
@@ -231,6 +242,53 @@ set field:
 	initial: no
 set field:
 	type: info
+	name: Statistics
+set field:
+	type: boolean
+	name: trim statistics
+	description: Removes special and masterpiece rarity cards from the statistics, as well as tokens, emblems, dungeons, heroes, conspiracies, vanguards, schemes, planes and phenomenons. Type statistics_info() in the console for detailed help.
+	initial: no
+set field:
+	type: text
+	name: filter statistics
+	description: Filter cards from the statistics. Syntax is: field_name_1=="value_1", field_name_2=="value_2", etc. Use == for strict equality, != for not equal, =: for contains, !: for not contains, <= and >= for numeric comparisons. Example: color=="RG", mana_value<="4", rule_text=:"deathtouch", sub_type!:"goblin"
+set field:
+	type: multiple choice
+	name: count secondary faces
+	description: Count the back side or secondary faces of the cards in the statistics? Type statistics_info() in the console for detailed help.
+	choice: MDFC
+	choice: TDFC
+	choice: Adventure
+	choice: Split
+	choice: Aftermath
+	choice: Flip
+	initial: MDFC, Adventure, Split
+set field:
+	type: text
+	name: custom super types
+	description: Custom supertypes for the stats page, separated by commas. Do not write custom types or subtypes. Type statistics_info() in the console for detailed help.
+set field:
+	type: text
+	name: custom creature races
+	description: Custom races for the stats page, separated by commas, or type "detect" for MSE to grab them. Type statistics_info() in the console for detailed help.
+	default: "detect"
+	script:
+		if value == "detect" then detect_custom_creature_subtypes_statistic() else value
+set field:
+	type: text
+	name: custom creature classes
+	description: Custom classes for the stats page, separated by commas. Type statistics_info() in the console for detailed help.
+set field:
+	type: text
+	name: card notes clauses split
+	description: Regex used to split the card notes in the Card Notes Clauses statistics category. Default is " *(\.|\n|;|,|(?=!)) *" which splits at each semicolon, each dot, each exclamation mark and each comma.
+	default: " *(\\.|\\n|;|,|(?=!)) *"
+set field:
+	type: text
+	name: global_variable_average_opening_hand
+	script: global_variable_average_opening_hand_statistic()
+set field:
+	type: info
 	name: Mainframe Template Options
 set field:
 	type: text
@@ -241,14 +299,19 @@ set field:
 	name: use flavor bar
 	description: Enables the flavor bar on Mainframe templates.
 set field:
+	type: text
+	name: last main partition
+	description: Card Number Partitions after this one aren't counted as the main part of the set, ex "301" rather than "301/300" or "301/900". Default is M.
+set field:
 	type: choice
 	name: default stamp
 	choice: standard
 	choice: none
 	choice: acorn
 	choice: universes beyond
+	choice: alchemy
+	choice: alchemy old
 	choice: custom
-	choice: custom color
 	description: The default stamp setup to use. Only works on new cards, not supported on all frames.
 set field:
 	type: text
@@ -295,9 +358,15 @@ set field:
 	choice: Your mana symbol will now be keyed to V (and V/W, V/U, etc. for colored/hybrid symbols).
 	choice: You can change number hybrids (2/V etc) to different mana symbols for even more custom symbols.
 	choice: Put the highest number to change (from 0 to 11) in "number hybrid variants" and save as NAME_0.png etc.
+set field:
+	type: text
+	name: print fix
+	description: An override fix for printing typeline issues. Enter card_style.rarity.content_width in the console tab, then put the number it puts here.
 ############################# Default style
 
 default set style:
+	global_variable_average_opening_hand:
+		visible: false
 	title:
 		padding left: 2
 		font:
@@ -342,6 +411,12 @@ default set style:
 			fill color 2:   rgb(58,7,80)
 			border color 1: rgb(255,  255,  255)
 			border color 2: rgb(255,  255,  255)
+		variation:
+			name: invertedcommon
+			border radius: 0.10
+			fill type: solid
+			fill color:   rgb(255,255,255)
+			border color: rgb(0,0,0)
 ##purple
 ##fill color 1:   rgb(224,170,247)
 ##fill color 2:   rgb(58,7,80)
@@ -408,6 +483,9 @@ default set style:
 	automatic reminder text:
 		render style: checklist
 		direction: vertical
+	count secondary faces:
+		render style: checklist
+		direction: vertical
 	sort special rarity:
 		render style: both
 		choice images:
@@ -425,10 +503,25 @@ default set style:
 			English:  /magic.mse-game/icons/language-en.png
 			English_(British): /magic.mse-game/icons/language-en-gb.png
 			English_(Canadian): /magic.mse-game/icons/language-en-ca.png
+			Español: /magic.mse-game/icons/language-es.png
 			Français: /magic.mse-game/icons/language-fr.png
+			Deutsch: /magic.mse-game/icons/language-de.png
 			Italiano: /magic.mse-game/icons/language-it.png
 			Português_do_Brasil: /magic.mse-game/icons/language-br.png
-			Russian: /magic.mse-game/icons/language-ru.png
+			Русский: /magic.mse-game/icons/language-ru.png
+			日本語: /magic.mse-game/icons/language-ja.png
+			한국어: /magic.mse-game/icons/language-ko.png
+			汉语: /magic.mse-game/icons/language-zh.png
+			漢語: /magic.mse-game/icons/language-zh.png
 	mana symbol options:
 		render style: checklist
 		direction: vertical
+	default stamp:
+		render style: both
+		choice images:
+			standard: /magic.mse-game/stamps/foil.png
+			acorn: /magic.mse-game/stamps/acorn.png
+			universes beyond: /magic.mse-game/stamps/ub.png
+			alchemy: /magic.mse-game/stamps/alchemy.png
+			alchemy old: /magic.mse-game/stamps/alchemy_old.png
+			custom: {if contains(set.custom_stamp_name, match:".png") then "/magic-mainframe-extras.mse-include/"+set.custom_stamp_name else ""}

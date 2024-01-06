@@ -689,9 +689,9 @@ symbol:
 	regex: yes
 	image: 18.png
 symbol:
-	code: 15(?!/)
+	code: 17(?!/)
 	regex: yes
-	image: 15.png
+	image: 17.png
 symbol:
 	code: 16(?!/)
 	regex: yes

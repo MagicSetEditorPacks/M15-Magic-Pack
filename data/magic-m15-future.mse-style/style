@@ -123,9 +123,10 @@ init script:
 	
 	chop_top := {if styling.chop_top == "" then 0 else if comma_count(styling.chop_top) == "," or comma_count(styling.chop_top) == ",," then split_text(match:",", styling.chop_top).0 else styling.chop_top}
 	chop_bot := {if comma_count(styling.chop_top) == ",," then split_text(match:",", styling.chop_top).1 else if styling.chop_bottom == "" then 0 else styling.chop_bottom}
-	bar_offset := {if styling_offset() == "-" then 0 else if styling_offset() != "" then -styling_offset() else 0}
-	styling_offset := { replace(styling.flavor_bar_offset, match:"(u|d)+", replace: "") }
-	offset_lines := {offset_counter(styling.flavor_bar_offset)}
+
+	# alternate rarity color
+	alt_rarity := {styling.alt_rarity_color}
+	
 
 ############################################################## Set info fields
 set info style:
@@ -146,10 +147,6 @@ styling field:
 	name: chop bottom
 	description: Shrinks the textbox X pixels from the bottom.
 styling field:
-	type: text
-	name: flavor bar offset
-	description: Move the flavor bar down X pixels. Use negative to move up.
-styling field:
 	type: boolean
 	name: use holofoil stamps
 	description: Change to no to disable rare holofoil stamps
@@ -163,6 +160,10 @@ styling field:
 	name: beleren
 	description: Should these cards use Beleren or the original font?
 	initial: yes
+styling field:
+	type: text
+	name: alt rarity color
+	description: Use a custom color for the rarity symbol. Formatted as "R1,G1,B1:R2,G2,B2:...:X:" 1 and 2 are fill color, 3 and 4 border color, X is border thickness. For example, rare is 214,196,94:95,84,40:0,0,0:0,0,0:0.07
 styling field:
 	type: boolean
 	name: shifted sorting
@@ -339,10 +340,10 @@ card style:
 			planeswalker: { if styling.original_symbols then "/magic-future-common.mse-include/planeswalker_" + typesymbol_color(value) + ".png" }
 	############################# Image
 	image:
-		left: 32
+		left: 30
 		top: 44
-		width: 327
-		height: 310
+		width: 328
+		height: 309
 		z index: 1
 		mask: mask_image.png
 	############################# Card type
@@ -392,28 +393,34 @@ card style:
 			basic land:
 				script:
 					if use_main_rarity() then "/magic-mainframe-extras.mse-include/" + un_png(set.mainframe_rarity_name) + "c.png"
+					else if use_alt_rarity() then alt_symbol()
 					else if styling.inverted_common_symbol then symbol_variation(symbol: set.symbol, variation: "invertedcommon")
 					else symbol_variation(symbol: set.symbol, variation: "common")
 			common:
 				script:
 					if use_main_rarity() then "/magic-mainframe-extras.mse-include/" + un_png(set.mainframe_rarity_name) + "c.png"
+					else if use_alt_rarity() then alt_symbol()
 					else if styling.inverted_common_symbol then symbol_variation(symbol: set.symbol, variation: "invertedcommon")
 					else symbol_variation(symbol: set.symbol, variation: "common")
 			uncommon:
 				script:
 					if use_main_rarity() then "/magic-mainframe-extras.mse-include/" + un_png(set.mainframe_rarity_name) + "u.png"
+					else if use_alt_rarity() then alt_symbol()
 					else symbol_variation(symbol: set.symbol, variation: "uncommon")
 			rare:
 				script:
 					if use_main_rarity() then "/magic-mainframe-extras.mse-include/" + un_png(set.mainframe_rarity_name) + "r.png"
+					else if use_alt_rarity() then alt_symbol()
 					else symbol_variation(symbol: set.symbol, variation: "rare")
 			mythic rare:
 				script:
 					if use_main_rarity() then "/magic-mainframe-extras.mse-include/" + un_png(set.mainframe_rarity_name) + "m.png"
+					else if use_alt_rarity() then alt_symbol()
 					else symbol_variation(symbol: set.symbol, variation: "mythic rare")
 			special:
 				script:
 					if use_main_rarity() then "/magic-mainframe-extras.mse-include/" + un_png(set.mainframe_rarity_name) + "s.png"
+					else if use_alt_rarity() then alt_symbol()
 					else symbol_variation(symbol: set.symbol, variation: "special")
 			masterpiece:
 				script:
@@ -614,6 +621,12 @@ extra card field:
 	choice: stamp
 	save value: false
 	editable: false
+extra card field:
+	type: text
+	name: vorthos box
+	save value: true
+	editable: true
+	description: Where they put mtgstory.com on story spotlights.
 extra card style:
 	card code:
 		left: 24
@@ -728,3 +741,15 @@ extra card style:
 		render style: image
 		image: bar.png
 		visible: { card.rule_text != "" and remove_tags(card.flavor_text) != "" and set.use_flavor_bar }
+	vorthos box:
+		right: { if card.pt != "" then 275 else 350 }
+		top: 488
+		left: 210
+		height: 10
+		z index: 3
+		alignment: middle right
+		font:
+			name: Relay-Medium
+			size: 7
+			color: white
+			weight: bold

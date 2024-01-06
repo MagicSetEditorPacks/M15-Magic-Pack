@@ -644,6 +644,10 @@ styling field:
 	initial: no
 	description: Upload a custom image to replace the default floor. Clickable on the outside edges of the border walls.
 styling field:
+	type: boolean
+	name: show grid
+	description: Show the dungeon gridlines?
+styling field:
 	type: text
 	name: level 2 long rooms
 	description: Make these rooms continue from the last level, like Oubliette.
@@ -2432,6 +2436,7 @@ extra card style:
 		z index: 1
 		render style: image
 		image: {grid_background()}
+		mask: {if styling.show_grid then "" else "gridmask.png"}
 	floor:
 		left: 22
 		top: {max_start()-5}
