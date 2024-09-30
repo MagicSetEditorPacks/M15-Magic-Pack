@@ -14,8 +14,8 @@ depends on:
 	package: magic-default-image.mse-include
 	version: 2007-09-23
 depends on:
-	package: magic-watermarks.mse-include
-	version: 2007-09-23
+	package: magic-modules.mse-include
+	version: 2024-05-20
 depends on:
 	package: magic-mana-small.mse-symbol-font
 	version: 2007-09-23
@@ -38,7 +38,17 @@ init script:
 		else "2" # textbox
 	}
 	
-	template_suffix := [card: "card.jpg", card2: "card2.jpg", pt: "pt.png"]
+	template_prefix := {
+		card: ""
+		card2: ""
+		card3: ""
+		pt: "/magic-modules.mse-include/pts/375 m15/"
+	}
+	template_suffix := [
+		card: "card.jpg",
+		card2: "card2.jpg",
+		pt: "pt.png"
+	]
 	template      := { input + template_suffix[type] }
 	land_template := { (if input == "a" then "c" else input) + template_suffix[type] }
 	
@@ -53,6 +63,7 @@ init script:
 	guild_mana := { styling.use_guild_mana_symbols }
 	
 	card_shape := { "token" }
+	watermark_include := "/magic-modules.mse-include/watermarks"
 
 ############################################################## Set info fields
 set info style:
@@ -132,6 +143,8 @@ styling style:
 			no:  { symbol_variation(symbol: set.symbol, variation: "common") }
 			yes: { symbol_variation(symbol: set.symbol, variation: "invertedcommon") }
 ############################################################## Card fields
+include file: /magic-modules.mse-include/information/card_fields
+include file: /magic-modules.mse-include/information/corners
 card style:
 	############################# Background stuff
 	border color:
@@ -209,21 +222,7 @@ card style:
 		z index: 2
 		alignment: middle right
 		render style: image
-		choice images:
-			# Images based on the set symbol
-			basic land:
-				script:
-					if styling.inverted_common_symbol then symbol_variation(symbol: set.symbol, variation: "invertedcommon")
-					else symbol_variation(symbol: set.symbol, variation: "common")
-			common:
-				script:
-					if styling.inverted_common_symbol then symbol_variation(symbol: set.symbol, variation: "invertedcommon")
-					else symbol_variation(symbol: set.symbol, variation: "common")
-			uncommon:   script: symbol_variation(symbol: set.symbol, variation: "uncommon")
-			rare:       script: symbol_variation(symbol: set.symbol, variation: "rare")
-			mythic rare:       script: symbol_variation(symbol: set.symbol, variation: "mythic rare")
-			special:    script: symbol_variation(symbol: set.symbol, variation: "special")
-			masterpiece: script: symbol_variation(symbol: set.masterpiece_symbol, variation: "mythic rare")
+		include file: /magic-modules.mse-include/rarities/choice_images
 	############################# Text box
 	text:
 		left: 31
@@ -273,7 +272,8 @@ card style:
 		render style: image
 		alignment: middle center
 		popup style: in place
-		include file: /magic-watermarks.mse-include/watermarks
+		include file:	/magic.mse-game/watermarks/menu_choice_images
+		image:			{ watermark_image_1() }
 	############################# PT
 	pt:
 		z index: 2
@@ -287,58 +287,7 @@ card style:
 			size: 16
 			color: black
 			separator color: red
-	############################# Card sorting / numbering
-	set code:
-		left: 24
-		top: 498
-		width: 40
-		height: 10
-		z index: 1
-		font:
-			name: Relay-Medium
-			size: 7
-			color: white
-			weight: bold			
-	############################# Copyright stuff
-	illustrator:
-		left: { 44 + card_style.set_code.content_width }
-		top: 497.5
-		width: 200
-		height: 10
-		z index: 1
-		font:
-			name: Beleren Small Caps Bold
-			size: 7.25
-			color: white
-	copyright:
-		right: 350
-		top: { if card.pt != "" and not styling.center_pt then 500 else 488 }
-		width: 140
-		height: 10
-		z index: 2
-		visible: { not set.automatic_copyright }
-		alignment: middle right shrink-overflow
-		font:
-			name: Matrix
-			size: 7
-			color: white
-			weight: bold
 ############################################################## Extra card fields
-extra card field:
-	type: text
-	name: card code
-	save value: false
-	script:
-		if set.automatic_card_numbers then
-			forward_editor(prefix: card_number_m15() + "/" + card_count_m15() + " " + rarity_code() + " ", field: card.card_code_text)
-		else
-			combined_editor(field1: card.custom_card_number, separator: " " + rarity_code() + " ", field2: card.card_code_text)
-extra card field:
-	type: choice
-	name: artist arrow
-	editable: false
-	save value: false
-	choice: white
 extra card field:
 	type: choice
 	name: pt box
@@ -351,33 +300,7 @@ extra card field:
 	choice: foil
 	save value: false
 	editable: false
-extra card field:
-	type: text
-	name: auto copyright
-	script: set.copyright
-	save value: false
-	editable: false
-	show statistics: false
 extra card style:
-	card code:
-		left: 24
-		top: 488
-		width: 120
-		height: 10
-		z index: 1
-		font:
-			name: Relay-Medium
-			size: 7
-			color: white
-			weight: bold
-	artist arrow:
-		left: { 28 + card_style.set_code.content_width }
-		top: 500
-		width: 12
-		height: 7
-		z index: 1
-		render style: image
-		image: artist_arrow.png
 	pt box:
 		left: {if styling.center_pt then 144 else 273 }
 		top: 466
@@ -386,7 +309,7 @@ extra card style:
 		z index: 1
 		visible: { card.pt != "" }
 		render style: image
-		image: { card_ptbox() }
+		image: { module_ptbox() }
 	foil layer:
 		left: 0
 		top : 0
@@ -395,16 +318,3 @@ extra card style:
 		z index: 3
 		render style: image
 		image: {if styling.overlay == "" then nil else styling.overlay + "/overlay.png"}
-	auto copyright:
-		right: 350
-		top: { if card.pt != "" and not styling.center_pt then 500 else 488 }
-		width: 140
-		height: 10
-		z index: 2
-		alignment: middle right shrink-overflow
-		visible: {set.automatic_copyright}
-		font:
-			name: Matrix
-			size: 7
-			color: white
-			weight: bold
