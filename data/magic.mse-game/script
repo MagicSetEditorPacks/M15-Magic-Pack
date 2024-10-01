@@ -2408,7 +2408,7 @@ custom_watermark_link := {
 	array := split_comma(field)
 	#### not blank, has png, is either verified or old link that's probably fine
 	if array.0 != "" and (has_png(array.0) and array.1 or else "" != "Not found")
-		then "/magic-mainframe-extras.mse-include/"+field
+		then "/magic-mainframe-extras.mse-include/"+array.0
 	else "/magic-modules.mse-include/watermarks/other/planeswalker.png"
 }
 card_watermark_a := {""}
@@ -2418,7 +2418,7 @@ custom_card_watermark := {
 	array := split_comma(field)
 	#### not blank, has png, is either verified or old link that's probably fine
 	if array.0 != "" and (has_png(array.0) and array.1 or else "" != "Not found")
-		then "/magic-mainframe-extras.mse-include/" + field
+		then "/magic-mainframe-extras.mse-include/" + array.0
 	else if card_watermark_a() != "" then "/magic-mainframe-extras.mse-include/" + card_watermark_a()
 	else "/magic-modules.mse-include/watermarks/other/planeswalker.png"
 }
