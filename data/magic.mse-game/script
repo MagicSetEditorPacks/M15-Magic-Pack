@@ -1187,7 +1187,9 @@ handle_merged_rt := {
 handle_action_rt := {
 	"<use-if-bumped>To " + to + ", " + to_lower(input) + "</use-if-bumped><otherwise>" + input + "</otherwise>"
 }
-
+handle_action_rt_single := {
+	"<use-if-bumped>" + prefix + " " + to_lower(input) + "</use-if-bumped><otherwise>" + input + "</otherwise>"
+}
 ############################################################## Complex reminder texts
 self_pro_check := match@(match:"You ha(ve|s) <kw-A><nospellcheck>protection")
 protection_code := {
@@ -1689,6 +1691,19 @@ text_filter :=
 	tag_contents@(
 		tag: "<atom-cardname>",
 		contents: { "<nospellcheck>" + (if card_name=="" then "CARDNAME" else strip_card_codes(card_name, atom:true)) + "</nospellcheck>" }
+	) +
+	#### capitalize This type when appropriate
+	replace@(
+		match:"([•.]) <atom-cardname><nospellcheck>this",
+		replace:"\\1 <atom-cardname><nospellcheck>This"
+	) +
+	replace@(
+		match:"([\"“'])<atom-cardname><nospellcheck>this",
+		replace:"\\1<atom-cardname><nospellcheck>This"
+	) +
+	replace@(
+		match:"^<atom-cardname><nospellcheck>this",
+		replace:"<atom-cardname><nospellcheck>This"
 	) +
 	tag_contents@(
 		tag: "<atom-legname>",
@@ -2861,13 +2876,13 @@ card_number_old_1 := {
 	else if auto_copy then
 		combined_editor(
 			field1: card.auto_copyright,
-			separator: card.card_number,
+			separator: " " + card.card_number + " ",
 			field2: card.card_code_text
 		)
 	else
 		combined_editor(
 			field1: card.copyright,
-			separator: card.card_number,
+			separator: " " + card.card_number + " ",
 			field2: card.card_code_text
 		)
 }
@@ -3008,8 +3023,8 @@ card_name_for_level := {
 	if set.CARDNAME_replacement == "card's type"
 		then (
 			ty := to_lower(cardname_type(card["type"+tag]))
-			if ty == "" then "this"
-			else "this " + ty
+			if ty == "" then "This"
+			else "This " + ty
 		)
 	else if set.CARDNAME_replacement == "card's alias" and card["alias"+tag] != ""
 		then card["alias"+tag]
@@ -3756,7 +3771,16 @@ loyalty_textbox_background_image :=
 
 ############################################################## Separators
 separator_enable_level := { false }
-separator_default := { if set.use_flavor_bar then "flavor bar" else "none" }
+separator_default := { 
+	if set.use_flavor_bar then (
+		if set.default_flavor_bar == "thin bar"
+			then "grey bar"
+		else if set.default_flavor_bar == "thick bar"
+			then "flavor bar"
+		else set.default_flavor_bar
+	)
+	else "none"
+}
 
 flavor_bar_left := { face_coordinates_map(input).left }
 flavor_bar_top :=
