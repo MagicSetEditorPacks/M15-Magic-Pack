@@ -967,8 +967,8 @@ set_watermark_blend := {
 spotlight_watermark_blend := {
 	if face == false then face := card.card_color
 	wmc := watermark_colors(face:face)
-	c1 := "/magic-watermarks.mse-include/spotlight/" + wmc.0 + (if contains(face, match:"land") then "l") + "spotlight.png"
-	c2 := "/magic-watermarks.mse-include/spotlight/" + wmc.1 + (if contains(face, match:"land") then "l") + "spotlight.png"
+	c1 := "/magic-watermarks.mse-include/sets/" + watermark_colors().0 + "mark.png"
+	c2 := "/magic-watermarks.mse-include/sets/" + watermark_colors().0 + "mark.png"
 	if contains(input, match:".png,") then (
 		array := split_text(input+",,", match:",")
 		input := array.0
@@ -979,8 +979,8 @@ spotlight_watermark_blend := {
 		c1 := crop(c1, height:h, width:l, offset_x:0, offset_y:0)
 		c2 := crop(c2, height:h, width:l, offset_x:0, offset_y:0)
 	)
-	set_alpha(
-		alpha: 0.75
+		set_alpha(
+		alpha: 1
 		input:
 			linear_blend(
 				image1: 
