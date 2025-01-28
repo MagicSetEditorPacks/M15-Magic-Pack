@@ -7,20 +7,20 @@ position hint:		095
 
 version:			2024-10-01
 depends on:
-	package:			magic.mse-game
-	version:			2014-06-25
+	package:		magic.mse-game
+	version:		2014-06-25
 depends on:
-	package:			magic-mana-large.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-large.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-mana-small.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-small.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-modules.mse-include
-	version:			2024-10-01
+	package:		magic-modules.mse-include
+	version:		2024-10-01
 depends on:
-	package:			magic-mainframe-extras.mse-include
-	version:			2007-09-23
+	package:		magic-mainframe-extras.mse-include
+	version:		2007-09-23
 
 card width:			744
 card height:		1039
@@ -122,6 +122,7 @@ init script:
 		crown:				"crown/",
 		stamprim:			"stamprim/",
 		nonstamprim:		"nonstamprim/",
+		alias:				"/magic-modules.mse-include/extras/alias/capenna/",
 		identity:			"/magic-modules.mse-include/indicators/"
 	]
 	template_suffix :=
@@ -133,6 +134,7 @@ init script:
 		crown:				"crown.png",
 		stamprim:			"stamprim.png",
 		nonstamprim:		"nonstamprim.png",
+		alias:				"alias.png",
 		identity:			"identity.png"
 	]
 	template :=
@@ -157,6 +159,7 @@ init script:
 	card_crown :=				{ color_background(input: card.card_color, type: "crown",				base_hybrid: card_hybrid)}@(offset: 0)
 	card_stamprim :=			{ color_background(input: card.card_color, type: "stamprim",			base_hybrid: card_hybrid)}@(offset: 0)
 	card_nonstamprim :=			{ color_background(input: card.card_color, type: "nonstamprim",			base_hybrid: card_hybrid)}@(offset: 0)
+	card_alias :=			{ color_background(input: card.card_color, type: "alias",			base_hybrid: card_hybrid)}@(offset: 0)
 	
 	pure_colors :=
 	{
@@ -172,6 +175,9 @@ init script:
 	
 	is_promo :=			{ styling.promo }
 	is_unsorted :=		{ styling.remove_from_autocount }
+	is_skinned := 		{ styling.godzilla_style_alias }
+	use_vorthos := 		{ styling.vorthos_box }
+
 	is_crowned :=		{ styling.legend_crown == "yes" or (styling.legend_crown == "if legendary" and lang_setting("is_legendary")(card.super_type)) }
 	
 	chop_top :=			{ split := split_comma(styling.chop_text_box); if length(split) > 0 and split[0] != "" and split[0] != "-" then clamp(split[0], maximum:500, minimum:-500) else 0 }
@@ -261,14 +267,14 @@ styling field:
 	name:			textbox color
 	description:	Use the specified color for the textbox background.
 	choice:
-		name:			black
-		color:			rgb(0,0,0)
+		name:		black
+		color:		rgb(0,0,0)
 	choice:
-		name:			white
-		color:			rgb(255,255,255)
+		name:		white
+		color:		rgb(255,255,255)
 	choice:
-		name:			use card color
-		color:			rgb(255,255,254)
+		name:		use card color
+		color:		rgb(255,255,254)
 	initial:		rgb(255,255,254)
 styling field:
 	type:			text
@@ -279,11 +285,11 @@ styling field:
 	name:			stripes color
 	description:	Use the specified color for the textbox background.
 	choice:
-		name:			black
-		color:			rgb(0,0,0)
+		name:		black
+		color:		rgb(0,0,0)
 	choice:
-		name:			white
-		color:			rgb(255,255,255)
+		name:		white
+		color:		rgb(255,255,255)
 	initial:		rgb(255,255,255)
 styling field:
 	type:			text
@@ -298,11 +304,11 @@ styling field:
 	name:			rule text color
 	description:	Use the specified color for the rule text.
 	choice:
-		name:			black
-		color:			rgb(0,0,0)
+		name:		black
+		color:		rgb(0,0,0)
 	choice:
-		name:			white
-		color:			rgb(255,255,255)
+		name:		white
+		color:		rgb(255,255,255)
 	initial:		rgb(0,0,0)
 
 include file: /magic-modules.mse-include/texts/styling_fields
@@ -320,6 +326,16 @@ include file: /magic-modules.mse-include/rarities/styling_fields
 
 include file: /magic-modules.mse-include/watermarks/styling_fields
 
+styling field:
+	type:			boolean
+	name:			godzilla style alias
+	description:	Use a Godzilla-style alias to rename cards?
+	initial:		no
+styling field:
+	type:			boolean
+	name:			vorthos box
+	description: 	Where they put mtgstory.com on story spotlights.
+	initial:		yes
 styling field:
 	type:			package choice
 	name:			overlay
@@ -383,6 +399,21 @@ card style:
 		width:				{ popout_width() }
 		height:				{ popout_height() }
 		z index:			1010
+	############################# Name line
+	alias:
+		left:	87
+		top: 	112
+		width: 	{if is_skinned() then 570 else 0}
+		height: 42
+		alignment: { (if is_skinned() then "center" else "") + "bottom shrink-overflow"}
+		padding bottom: 0
+		z index: 900
+		font:
+			name: MPlantin-Italic
+			size: 18
+			style: bold
+			weight: bold
+			color: white
 	############################# Text box
 	text:
 		left:				97
@@ -480,6 +511,17 @@ extra card field:
 	editable:			false
 	save value:			false
 	show statistics:	false
+extra card field:
+	type: 				text
+	name: 				vorthos box
+	save value: 		true
+	editable: 			true
+extra card field:
+	type: 				choice
+	name: 				alias bar
+	script: 			card.card_color
+	save value: 		false
+	editable: 			false
 
 extra card style:
 	pinlines top:
@@ -556,3 +598,24 @@ extra card style:
 		z index:			855
 		visible:			{ is_stamped() }
 		mask:				border_stamp_mask.png
+	vorthos box:
+		right: { if card.loyalty != "" then 605 else 692 }
+		top: 976
+		width: 140
+		height: {if use_vorthos() then 10 else 0}
+		z index: 900
+		alignment: middle right
+		font:
+			name: Relay-Medium
+			size: 14
+			color: white
+			weight: bold
+	alias bar:
+		left: { (stylesheet.card_width - 596) / 2 }
+		top: 120
+		width: 596
+		height: 42
+		z index: 200
+		render style: image
+		visible: {is_skinned()}
+		image: {module_alias()}
