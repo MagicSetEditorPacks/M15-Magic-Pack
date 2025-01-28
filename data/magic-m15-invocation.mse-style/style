@@ -1,114 +1,168 @@
-﻿mse version: 2.0.0
+﻿mse version: 2.1.2
 game: magic
 short name: Invocation
-full name: Amonkhet Invocations
+full name: Amonkhet Showcase
 icon: card-sample.png
-installer group: magic/m15 style/amonkhet/invocations
 position hint: 092
 
-
-version: 2024-06-07
+version:			2025-01-01
 depends on:
-	package: magic.mse-game
-	version: 2015-04-08
+	package:		magic.mse-game
+	version:		2014-06-25
 depends on:
-	package: magic-default-image.mse-include
-	version: 2007-09-23
+	package:		magic-mana-large.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package: magic-mana-small.mse-symbol-font
-	version: 2020-02-07
+	package:		magic-mana-small.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package: magic-mana-large.mse-symbol-font
-	version: 2020-02-07
+	package:		magic-modules.mse-include
+	version:		2024-10-01
 depends on:
-	package: magic-mana-small-invocation.mse-symbol-font
-	version: 2017-03-31
+	package:		magic-mainframe-extras.mse-include
+	version:		2007-09-23
 depends on:
-	package: magic-modules.mse-include
-	version: 2024-10-01
+	package: 		magic-watermarks.mse-include
+	version: 		2016-03-13
+depends on:
+	package: 		magic-default-image.mse-include
+	version: 		2007-09-23
 
 card width: 375
 card height: 523
 card dpi: 150
 ############################################################## Extra scripts
 init script:
-	# Load scripts for image box
-	include file: /magic-default-image.mse-include/scripts
+	swap_fonts_pt_default :=
+	[
+		name: {"Beleren Bold"},
+		size: {12.0},
+		color: {"black"},
+		vertical: {0},
+		italic: {"Beleren Bold"}
+	]
+	
+	swap_fonts_body_default :=
+	[
+		name: {"MPlantin"},
+		size: {14.0},
+		color: {"white"},
+		vertical: {0},
+		italic: {"MPlantin-Italic"}
+	]
+	
+	typeline_offset_width_1 := { 0 }
+	typeline_offset_left_1 := { 0 }
+	rarity_offset_top_1 := { 2 }
+	swap_fonts_type_default :=
+	[
+		name: { if is_beleren() or is_revamped()  then "Beleren Bold" else if contains(styling.regular_options, match: "Papyrus") then "Papyrus" else if is_gothic() then "ShangoGothic-Bold" else "Invocation Calligraphr" }
+		size: {14.0},
+		color: {"black"},
+		vertical: {0},
+		italic: {""}
+	]
+	
+	transform_symbol_disabled_1 := { true }
+	card_symbol_offset_left_1 := {	 0 }
+	nameline_offset_width_1 := { 0 }
+	nameline_offset_left_1 := { 0 }
+	swap_fonts_name_default :=
+	[
+		name: {"Beleren Bold"},
+		size: {15.0},
+		color: {"black"},
+		vertical: {1},
+		italic: {""}
+	]
+	
+	card_stamp_offset_top_1 := { 0 }
+	
+	foil_mask_added_sections := {
+		output := []
+		pt_field := if face == 1 then card.pt else card["pt_" + face]
+		if pt_field != "" then output := output + ["foil_mask_pt.png"]
+		if is_crowned() then output := output + ["foil_mask_crown.png"]
+		output
+	}@(face:1)
 
-	# Should hybrids have a grey name?
-	mask_hybrid_with_land := { contains(styling.regular_options, match:"grey hybrid names") }
-	
-	# Should multicolor lands with basic land types have a colored name?
-	mask_multi_land_with_color := { contains(styling.regular_options, match:"colored multicolor land names") }
-	
-	# Build the template, new frames need to be added here
 	template_prefix := [
-		card: ""
-		card2: ""
-		identity: ""
+		card: "card/",
+		card2: "card/",
+		pt: "pt/",
+		crown: "crown/",
+		stamp: "stamp/",
+		ubstamp: "stamp/ub/",
+		alias: "/magic-modules.mse-include/extras/alias/",
+		identity: "/magic-modules.mse-include/indicators/"
 	]
 	template_suffix := [
-		card: "card.png"
-		card2: "card2.png"
+		card: "card.png",
+		card2: "card2.png",
+		pt: "pt.png",
+		crown: "crown.png",
+		stamp: "stamp.png",
+		ubstamp: "stamp.png",
+		alias: "alias.png",
 		identity: "identity.png"
 	]
-	template      := { template_prefix[type] + (if input == "a" then "c" else input) + template_suffix[type] }
-	land_template := { template_prefix[type] + (if input == "a" then "c" else input) + template_suffix[type] }
-	# Use land templates for previews because they show more contrast
-	hybrid_previews := "land,hybrid"
-
+	template :=			{ template_prefix[type] + input + template_suffix[type] }
+	land_template :=	{ template_prefix[type] + (if input == "a" then "c" else input) + template_suffix[type] }
+	
+	card_crown :=		{ color_background(input: card.card_color,	type: "crown",		base_hybrid: card_hybrid) }
+	card_ptbox :=		{ color_background(input: card.card_color,	type: "pt",			base_hybrid: card_hybrid) }
+	card_alias :=		{ color_background(input: card.card_color,	type: "alias",		base_hybrid: card_hybrid) }
+	ub_stamp :=			{ color_background(blend_type: "stamp",		type: "ubstamp",	base_hybrid: card_hybrid) }
 	card_background2 := { color_background(type:"card2",	base_hybrid:card_hybrid)		}@(offset:0 )
 
-	# Use the normal tap symbol
-	mana_t := {
-		if      styling.tap_symbol == "old"        then "old"
-		else if styling.tap_symbol == "diagonal T" then "older"
-		else                                            "new"
-	}
-
-	# Use guild mana symbols?
-	guild_mana := { contains(styling.regular_options, match:"guild mana symbols") }
-
-	# Is the card a promo card?
-	is_promo := { contains(styling.regular_options, match:"promo") }
-	
 	# Should the frame be rendered in grayscale?
 	frame_saturation := { if contains(styling.regular_options, match:"grayscale") then -1 else 0 }
-
-
 	is_beleren := { contains(styling.regular_options, match: "Beleren") }
 	is_papyrus := { contains(styling.regular_options, match: "Papyrus") }
 	is_gothic := { contains(styling.regular_options, match: "ShangoGothic") }
 
 	is_unsorted := {styling.remove_from_autocount}
+	is_skinned := { styling.godzilla_style_alias }
+	use_vorthos := { styling.vorthos_box }
 	
 	is_revamped := {styling.revamped_form}
 	card_stamp_disabled_1 := { not is_revamped() }
 	card_stamp_offset_top_1 := {5}
 	watermark_include := "/magic-modules.mse-include/watermarks"
 	card_symbol_offset_top := {2}
-############################################################## Set info fields
-set info style:
-	symbol:
-		variation:
-			name: invertedcommon
-			border radius: 0.10
-			fill type: solid
-			fill color:   rgb(255,255,255)
-			border color: rgb(0,0,0)
+
+	chop_top := { split := split_comma(styling.chop_text_box); if length(split) > 0 and split.0 != "" then clamp(split.0, maximum: 1500, minimum: -1500) else 0 }
+	chop_bot := { split := split_comma(styling.chop_text_box); if length(split) > 1 and split.1 != "" then clamp(split.1, maximum: 1500, minimum: -1500) else 0 }
+	
+	popout_left := { split := split_comma(styling.popout_image_coordinates); if length(split) > 3 and split.0 != "" then clamp(split.0, maximum: 1500, minimum: -500) else 0 }
+	popout_top := { split := split_comma(styling.popout_image_coordinates); if length(split) > 3 and split.1 != "" then clamp(split.1, maximum: 2000, minimum: -500) else 0 }
+	popout_width := { split := split_comma(styling.popout_image_coordinates); if length(split) > 3 and split.2 != "" then clamp(split.2, maximum: 1500, minimum: 0) else 0 }
+	popout_height := { split := split_comma(styling.popout_image_coordinates); if length(split) > 3 and split.3 != "" then clamp(split.3, maximum: 2000, minimum: 0) else 0 }
 ############################################################## Extra style options
 styling field:
-	type: boolean
-	name: revamped form
-	description: Use the revamped form used in March of the Machines
+	type:			text
+	name:			popout image coordinates
+	description:	The coordinates for the popout image field, formatted as "left,top,width,height". Used to make the illustration jump in front of the frame.
+styling field:
+	type:			boolean
+	name:			stretch image to whole card
+	description:	Make the image span the whole card instead of just the visible part. Use this to help make popout effects.
+	initial:		no
+	
+include file: /magic-modules.mse-include/texts/styling_fields
+
+styling field:
+	type:			boolean
+	name:			revamped form
+	description:	Use the revamped form used in March of the Machines
+	initial:		yes
+
 styling field:
 	type: multiple choice
 	name: regular options
 	description: Which regular styling options would you like to use?
 	choice: center typeline
 	choice: show normal rarity
-	choice: guild mana symbols
-	choice: promo rarity
 	choice: grayscale
 	choice: silver border
 	choice: snap cartouche to name
@@ -116,42 +170,49 @@ styling field:
 	choice: Papyrus font
 	choice: Beleren font
 	choice: ShangoGothic font
-	initial: center typeline
-styling field:
-	type: boolean
-	name: remove from autocount
-	description: Removes the automatic card number for specific cards, to allow for overcounted cards like in Planeswalker Decks.
-	initial: no
+
 include file: /magic-modules.mse-include/rarities/styling_fields
+
+include file: /magic-modules.mse-include/watermarks/styling_fields
+
 styling field:
-	type: choice
-	name: tap symbol
-	description: What tap and untap symbols should be used on cards?
-	initial: modern
-	choice: modern
-	choice: old
-	choice: diagonal T
+	type:			boolean
+	name:			godzilla style alias
+	description:	Use a Godzilla-style alias to rename cards?
+	initial:		no
 styling field:
-	type: package choice
-	name: overlay
-	description: Should there be an overlay applied, such as foil?
-	match: magic-overlay-*.mse-include
-	required: false
-styling style:
-	tap symbol:
-		render style: both
-		choice images:
-			modern:     /magic-mana-small-invocation.mse-symbol-font/mana_t.png
-			old:        /magic-mana-small-invocation.mse-symbol-font/mana_t_old.png
-			diagonal T: /magic-mana-small-invocation.mse-symbol-font/mana_t_older.png
-	regular options:
-		render style: checklist
-		direction: vertical
+	type:			boolean
+	name:			vorthos box
+	description: 	Where they put mtgstory.com on story spotlights.
+	initial:		yes
+styling field:
+	type:			package choice
+	name:			overlay
+	description:	Should there be an overlay applied, such as foil?
+	match:			magic-overlay-*.mse-include
+	required:		false
+
+include file: /magic-modules.mse-include/information/styling_fields
+
+include file: /magic-modules.mse-include/symbol-fonts/styling_fields
+
+include file: /magic-modules.mse-include/fonts/styling_fields
 ############################################################## Card fields
-include file: /magic-modules.mse-include/corners/card_fields
-include file: /magic-modules.mse-include/separators/card_fields
+
+include file: /magic-modules.mse-include/information/card_fields
+
 include file: /magic-modules.mse-include/stamps/card_fields
-include file: /magic-modules.mse-include/card-symbols/card_fields
+
+include file: /magic-modules.mse-include/corners/card_fields
+
+include file: /magic-modules.mse-include/watermarks/card_fields
+
+include file: /magic-modules.mse-include/separators/card_fields
+
+include file: /magic-modules.mse-include/namelines/card_fields
+
+include file: /magic-modules.mse-include/typelines/card_fields
+
 card style:
 	card color:
 		left:	0
@@ -162,92 +223,41 @@ card style:
 		render style: image
 		popup style: in place
 		image: { saturate((if is_revamped() then card_background2() else card_background()), amount: frame_saturation()) }
-	############################# Name line
-	name: 
-		left: { if card.card_symbol != "none" then 50 else 35 }
-		top: { if is_beleren() or is_revamped() then 36 else if is_papyrus() then 38 else if is_gothic() then 35 else 33 }
-		right: { if contains(styling.regular_options, match:"nonexistent") then 320 else if contains(styling.regular_options, match:"snap") then max(30, card_style.name.content_width) + 35 else (if is_revamped() then 340 else 320) - card_style.casting_cost.content_width }
-		height: 18
-		alignment: bottom shrink-overflow
-		padding bottom: 0
-		padding top: 0
-		z index: 900
-		font:
-			name: { if is_beleren() or is_revamped()  then "Beleren Bold" else if contains(styling.regular_options, match: "Papyrus") then "Papyrus" else if is_gothic() then "ShangoGothic-Bold" else "Invocation Calligraphr" }
-			size: { if is_beleren() or is_revamped()  then 16 else if contains(styling.regular_options, match: "Papyrus") then 12 else 16 }
-			weight: { if is_papyrus() then "bold" else "" }
-			color: { if is_revamped() then "black" else rgb(40,10,6) }
-		
-	casting cost:
-		right: 346
-		top: 29
-		width: { max(30, card_style.casting_cost.content_width) + 5 }
-		height: 23
-		alignment: middle right
-		font:
-			name: MPlantin
-			size: 15
-		symbol font:
-			name: { if is_revamped() then "magic-mana-large" else "magic-mana-small-invocation" }
-			size: 15
-			alignment: middle right
-		always symbol: true
-		z index: 920
-		padding top: 0
-		visible: { not contains(styling.regular_options, match:"nonexistent") }
 	############################# Image
 	image:
-		left: 44
-		top: 79
-		width: 287
-		height:	202
-		z index: 2
-		default: { default_image(card.card_color) }
+		left:				44
+		top:				79
+		width:				287
+		height:				202
+		z index:			2
 		mask:  imagemask.png
-	############################# Card type
-	casting cost 2:
-		left: 31
-		top: 300
-		width: { max(5,card_style.casting_cost_2.content_width) + 5 }
-		height: 20
-		symbol font:
-			name: magic-mana-small-invocation
-			size: 15
-			alignment: middle right
-		always symbol: true
-		z index: 920
-		padding top: 0
-		
-	type:
-		left: { 33 + card_style.casting_cost_2.content_width }
-		top: { if is_revamped() or is_gothic() then 298 else 299 }
-		right: 302
-		height: 20
-		alignment: { if is_revamped() or not contains(styling.regular_options, match:"center typeline") then "middle shrink-overflow" else "center middle shrink-overflow" }
+	mainframe image:
+		left:				{ popout_left() }
+		top:				{ popout_top() }
+		width:				{ popout_width() }
+		height:				{ popout_height() }
+		z index:			1010
+	############################# Name line
+	alias:
+		left: { (stylesheet.card_width - 300) / 2 }
+		top: 	55
+		width: 	{if is_skinned() then 300 else 0}
+		height: 21
+		alignment: { (if is_skinned() then "center" else "") + "bottom shrink-overflow"}
+		padding bottom: 0
 		z index: 900
-		padding top: 2
 		font:
-			name: { if is_beleren() or is_revamped() then "Beleren Bold" else if contains(styling.regular_options, match: "Papyrus") then "Papyrus" else if is_gothic() then "ShangoGothic-Bold" else "Invocation Calligraphr" }
-			size: { if is_beleren() or is_revamped() then 14 else if is_papyrus() then 13 else 15 }
-			color: { if contains(styling.regular_options, match:"grayscale") or is_revamped() then "black" else rgb(40,10,6) }
-			weight: { if is_papyrus() then "bold" else "" }
-			separator color: red
-	rarity:
-		right: 344
-		top: 297
-		width: 44
-		height: 22
-		z index: 950
-		render style: image
-		alignment: middle right
-		visible: { is_revamped() or contains(styling.regular_options, match:"show normal rarity") }
-		include file: /magic-modules.mse-include/rarities/choice_images
+			name: MPlantin-Italic
+			size: 10
+			style: bold
+			weight: bold
+			color: white
 	############################# Text box
 	text:
 		left: 31
-		top: 355
+		top: {325-(-chop_top())}
 		width: 310
-		bottom: { if is_revamped() then 480 else 460 }
+		bottom: {if is_revamped() then 495-chop_bot() else 460-chop_bot()}
 		font:
 			name: {if is_revamped() then "MPlantin" else "ShangoGothic-Bold"}
 			size: { if is_revamped() then 14 else 12 }
@@ -292,69 +302,7 @@ card style:
 			size: 15
 			weight: bold
 			color: { if is_revamped() or contains(styling.regular_options, match:"grayscale") then "black" else rgb(16,16,0) }
-	############################# Copyright stuff
-	set code:
-		left: 24
-		top: 502
-		width: 40
-		height: 10
-		visible: { is_revamped() }
-		alignment: middle left
-		font:
-			name: Relay-Medium
-			size: 7
-			color: white
-			weight: bold
-		z index: 900
-	illustrator:
-		left: { if is_revamped() then 44 + card_style.set_code.content_width else 48 }
-		top: { if is_revamped() then 502 else 486 }
-		width: { if is_revamped() then 200 else 90 }
-		height: 10
-		z index: 3
-		alignment: middle left shrink-overflow
-		font:
-			name: { if is_revamped() then "Beleren Small Caps Bold" else "ShangoGothic-Bold" }
-			size: {if is_revamped() then 7 else 7.5}
-			color: { if is_revamped() then "white" else if contains(styling.regular_options, match:"grayscale") then "black" else rgb(40,10,6) }
-	copyright:
-		right: 350
-		top: 492
-		width: 129
-		height: 10
-		z index: 5
-		visible: {not set.automatic_copyright}
-		alignment: middle right shrink-overflow
-		font:
-			name: { if is_revamped() then "MPlantin" else "ShangoGothic-Bold" }
-			size: { if is_revamped() then 7.25 else 6 }
-			color: { if is_revamped() then "white" else if contains(styling.regular_options, match:"grayscale") then "black" else rgb(40,10,6) }
-	card code:
-		left: { if is_revamped() then 24 else 34 }
-		top: { if is_revamped() then 492 else 476 }
-		width: 104
-		height: 10
-		z index: 900
-		font:
-			name: { if is_revamped() then "Relay-Medium" else "ShangoGothic-Bold" }
-			size: { if is_revamped() then 7 else 6.75 }
-			color: { if is_revamped() then "white" else if contains(styling.regular_options, match:"grayscale") then "black" else rgb(40,10,6) }
-	partition select:
-		left: { if is_revamped() then 24 else 34 }
-		top: { if is_revamped() then 492 else 476 }
-		width: 35
-		height: 10
-		z index: 1100
-		popup style:		menu
-		render style:		hidden
 ############################################################## Extra card fields
-extra card field:
-	type: choice
-	name: artist arrow
-	editable: false
-	save value: false
-	choice: white
-	save value: false
 extra card field:
 	type: choice
 	name: pt box
@@ -431,13 +379,6 @@ extra card field:
 	editable: false
 	save value: false
 extra card field:
-	type: text
-	name: auto copyright
-	script: set.copyright
-	save value: false
-	editable: false
-	show statistics: false
-extra card field:
 	type: choice
 	name: invocation symbol master
 	choice: none
@@ -464,16 +405,19 @@ extra card field:
 	choice: backing
 	editable: false
 	save value: false
+extra card field:
+	type: 				text
+	name: 				vorthos box
+	save value: 		true
+	editable: 			true
+extra card field:
+	type: 				choice
+	name: 				alias bar
+	script: 			card.card_color
+	save value: 		false
+	editable: 			false
 
 extra card style:
-	artist arrow:
-		left: { if is_revamped() then 28 + card_style.set_code.content_width else 34 }
-		top: {if is_revamped() then 503 else 489 }
-		width: 12
-		height: 7
-		z index: 3
-		render style: image
-		image: { if is_revamped() then "artist_arrow.png" else saturate("inv_artist_arrow.png", amount: frame_saturation()) }
 	pt box:
 		left: 318
 		top: 422
@@ -622,18 +566,6 @@ extra card style:
 		render style: image
 		image: silver_border.png
 		visible: { not is_revamped() and contains(styling.regular_options, match:"silver border") }
-	auto copyright:
-		right: 350
-		top: 492
-		width: 129
-		height: 10
-		z index: 5
-		alignment: middle right shrink-overflow
-		visible: {set.automatic_copyright}
-		font:
-			name: { if is_revamped() then "MPlantin" else "ShangoGothic-Bold" }
-			size: { if is_revamped() then 7.25 else 6 }
-			color: { if is_revamped() then "white" else if contains(styling.regular_options, match:"grayscale") then "black" else rgb(40,10,6) }
 	stamp backing:
 		left: 165
 		top: 477
@@ -643,3 +575,24 @@ extra card style:
 		visible: { is_revamped() and card.card_stamp != "none" }
 		render style: image
 		image: { "/magic-modules.mse-include/stamps/backs/" + (if stamp_shape(field:1) == "triangle" then "triangle_stamp.png" else "stamp.png") }
+	vorthos box:
+		right: 345
+		top: 492
+		width: 140
+		height: {if use_vorthos() then 10 else 0}
+		z index: 900
+		alignment: middle right
+		font:
+			name: Relay-Medium
+			size: 7
+			color: white
+			weight: bold
+	alias bar:
+		left: { (stylesheet.card_width - 317) / 2 }
+		top: 58
+		width: 317
+		height: 23
+		z index: 2
+		render style: image
+		visible: {is_skinned()}
+		image: {module_alias()}
