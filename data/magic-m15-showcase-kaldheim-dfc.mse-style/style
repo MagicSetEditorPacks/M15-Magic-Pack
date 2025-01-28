@@ -1,30 +1,33 @@
-﻿mse version: 2.0.0
-game: magic
-short name: DFC Vikings
-full name: Kaldheim Showcase
-icon: card-sample.png
-installer group: magic/m15 style/normal cards
-position hint: 095
+﻿mse version:		2.0.0
+game: 				magic
+short name: 		DFC Vikings
+full name: 			Kaldheim Showcase
+icon: 				card-sample.png
+installer group: 	magic/m15 style/normal cards
+position hint: 		095
 
-version: 2024-09-01
+version:			2024-09-01
 depends on:
-	package: magic.mse-game
-	version: 2014-06-25
+	package:		magic.mse-game
+	version:		2014-06-25
 depends on:
-	package: magic-default-image.mse-include
-	version: 2007-09-23
+	package:		magic-default-image.mse-include
+	version:		2007-09-23
 depends on:
-	package: magic-modules.mse-include
-	version: 2024-10-01
+	package:		magic-modules.mse-include
+	version:		2024-10-01
 depends on:
-	package: magic-mana-large.mse-symbol-font
-	version: 2007-09-23
+	package:		magic-mana-large.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package: magic-mana-small.mse-symbol-font
-	version: 2007-09-23
+	package:		magic-mana-small.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package: magic-mainframe-extras.mse-include
-	version: 2007-09-23
+	package:		magic-mainframe-extras.mse-include
+	version:		2007-09-23
+depends on:
+	package:		magic-watermarks.mse-include
+	version:		2016-03-13
 
 card width: 752
 card height: 523
@@ -72,11 +75,12 @@ init script:
 	mask_multi_land_with_color := { styling.colored_multicolor_land_name }
 	
 	template_prefix := [
-		card: ""
+		card: "card/"
 		card2: "legend/"
-		pt: ""
+		pt: "pt/"
 		flag: "flags/"
 		flag2: "flags/"
+		alias: "/magic-modules.mse-include/extras/alias/"
 		stamp: "/magic-modules.mse-include/stamps/backs/375 round/"
 		ubstamp: "/magic-modules.mse-include/stamps/backs/375 ub/"
 		identity: "/magic-modules.mse-include/indicators/"
@@ -87,6 +91,7 @@ init script:
 		flag: "flag.png"
 		flag2: "flag2.png"
 		pt: "pt.png"
+		alias: "alias.png"
 		stamp: "stamp.png"
 		ubstamp: "stamp.png"
 		identity: "identity.png"
@@ -97,6 +102,7 @@ init script:
 	hybrid_previews := "land,hybrid"
 	legend_background := { color_background(type:"card2",     base_hybrid:card_hybrid) }
 	card_ptbox := { color_background(type:"pt",     base_hybrid:card_hybrid) }
+	card_alias := { color_background(type:"alias",     base_hybrid:card_hybrid) }
 	front_flag_image := { color_background(type:"flag",     base_hybrid:card_hybrid) }
 	back_flag_image := { color_background(type:"flag2",     base_hybrid:card_hybrid) }
 
@@ -121,14 +127,12 @@ init script:
 	ancestral_mana := { styling.ancestral_mana_symbols }
 	watermark_include := "/magic-modules.mse-include/watermarks"
 	is_unsorted := {styling.remove_from_autocount}
+	is_skinned := { styling.godzilla_style_alias }
+	use_vorthos := { styling.vorthos_box }
 
-	chop_top := {to_number(pull_comma_array(styling.text_chops, cell:0, end:false))}
-	chop_bot := {to_number(pull_comma_array(styling.text_chops, cell:1, end:false))}
-	chop_correction := { chop_bot() }
-	shrink_type := {if styling.shrink_typeline_text != "" then to_number(styling.shrink_typeline_text) else 0}
-	shrink_name := {if styling.shrink_name_text != "" then to_number(styling.shrink_name_text) else 0}
-	shrink_type2 := {if styling.shrink_typeline_text != "" then to_int((if comma_count(styling.shrink_typeline_text) != "" then split_text(match:",", styling.shrink_typeline_text).1)) else 0 }
-	shrink_name2 := {if styling.shrink_name_text != "" then to_int((if comma_count(styling.shrink_name_text) != "" then split_text(match:",", styling.shrink_name_text).1)) else 0 }
+	chop_top := { split := split_comma(styling.chop_text_box); if length(split) > 0 and split.0 != "" then clamp(split.0, maximum: 1500, minimum: -1500) else 0 }
+	chop_bot := { split := split_comma(styling.chop_text_box); if length(split) > 1 and split.1 != "" then clamp(split.1, maximum: 1500, minimum: -1500) else 0 }
+
 	use_main_rarity := { contains(set.mainframe_rarity_name, match: ".png")}
 	un_png := replace@(match:".png", replace: "")
 	is_vehicle := {lang_setting("is_vehicle")(card.sub_type)}
@@ -174,34 +178,25 @@ init script:
 	transform_symbol_offset_left_2 := {-9}
 	transform_symbol_offset_top_1 := { if is_legend() then 4 else -7 }
 	transform_symbol_offset_top_2 := { if back_legend() then 4 else -7 }
-############################################################## Set info fields
-set info style:
-	symbol:
-		variation:
-			name: invertedcommon
-			border radius: 0.10
-			fill type: solid
-			fill color:   rgb(255,255,255)
-			border color: rgb(0,0,0)
 ############################################################## Extra style options
+include file: /magic-modules.mse-include/watermarks/styling_fields
+
+styling field:
+	type: text
+	name: card watermark 2
+	description: Filename in magic-mainframe-extras to use for standalone card watermark of back face
+	script: verify_watermark_image(value)
+
+include file: /magic-modules.mse-include/rarities/styling_fields
+
+include file: /magic-modules.mse-include/texts/styling_fields
+
 styling field:
 	type: choice
 	name: dfc type
 	choice: transforming
 	choice: modal with standard flags
 	choice: modal with custom flags
-styling field:
-	type: text
-	name: text chops
-	description: Format as "X,Y". Shrinks textbox X pixels from the top and Y from bottom.
-styling field:
-	type: text
-	name: shrink name text
-	description: Shrinks name X pixels
-styling field:
-	type: text
-	name: shrink typeline text
-	description: Shrinks type X pixels
 styling field:
 	type: text
 	name: custom symbol one
@@ -215,6 +210,7 @@ styling field:
 	name: remove from autocount
 	description: Removes the automatic card number for specific cards, to allow for overcounted cards like in Planeswalker Decks.
 	initial: no
+
 include file: /magic-modules.mse-include/stamps/styling_fields
 
 styling field:
@@ -226,6 +222,16 @@ styling field:
 	name: unsorted casting cost
 	description: Disables automatic mana symbol sorting.
 	initial: no
+styling field:
+	type:			boolean
+	name:			godzilla style alias
+	description:	Use a Godzilla-style alias to rename cards?
+	initial:		no
+styling field:
+	type:			boolean
+	name:			vorthos box
+	description: 	Where they put mtgstory.com on story spotlights.
+	initial:		yes
 styling field:
 	type: boolean
 	name: ancestral mana symbols
@@ -330,7 +336,7 @@ card style:
 		top:	0
 		width:	375
 		height:	523
-		z index: 0
+		z index: 20
 		render style: image
 		popup style: in place
 		image: { if is_legend() then legend_background() else card_background() }
@@ -340,7 +346,7 @@ card style:
 		top:	0
 		width:	375
 		height:	523
-		z index: 0
+		z index: 20
 		render style: image
 		popup style: in place
 		image: { if back_legend() then legend_background() else card_background() }
@@ -350,13 +356,13 @@ card style:
 		left: 45
 		top: {if is_legend() then 33 else 22}
 		right:  { 341 - card_style.casting_cost.content_width }
-		height: {23 - 0.5*shrink_name()}
+		height: 23
 		alignment: bottom shrink-overflow
 		padding bottom: 0
 		z index: 900
 		font:
 			name: Beleren Bold
-			size: {15 - shrink_name()}
+			size: 15
 			color: white
 	name 2:
 		left: 422
@@ -402,6 +408,34 @@ card style:
 		always symbol: true
 		z index: 920
 		padding top: 0
+	alias:
+		left: 	90
+		top: 	{if is_legend() then 47 else 35}
+		width: 	{if is_skinned() then 185 else 0}
+		height: 42
+		alignment: { (if is_skinned() then "center" else "") + "bottom shrink-overflow"}
+		padding bottom: 0
+		z index: 900
+		font:
+			name: MPlantin-Italic
+			size: 9
+			style: bold
+			weight: bold
+			color: white
+	alias 2:
+		left: 	470
+		top: 	{if back_legend() then 47 else 35}
+		width: 	{if is_skinned() then 185 else 0}
+		height: 42
+		alignment: { (if is_skinned() then "center" else "") + "bottom shrink-overflow"}
+		padding bottom: 0
+		z index: 900
+		font:
+			name: MPlantin-Italic
+			size: 9
+			style: bold
+			weight: bold
+			color: white
 	############################# Image
 	image:
 		left: 39
@@ -466,7 +500,7 @@ card style:
 			separator color: red
 	rarity:
 		right: 344
-		top: 308
+		top: 307
 		width: 44
 		height: 22
 		z index: 950
@@ -475,7 +509,7 @@ card style:
 		include file: /magic-modules.mse-include/rarities/choice_images
 	rarity 2:
 		right: 721
-		top: 308
+		top: 307
 		width: 44
 		height: 22
 		z index: 950
@@ -625,6 +659,28 @@ extra card field:
 	editable: false
 	save value: false
 	show statistics: false
+extra card field:
+	type: 				text
+	name: 				vorthos box
+	save value: 		true
+	editable: 			true
+extra card field:
+	type: 				text
+	name: 				vorthos box 2
+	save value: 		true
+	editable: 			true
+extra card field:
+	type: 				choice
+	name: 				alias bar
+	script: 			card.card_color
+	save value: 		false
+	editable: 			false
+extra card field:
+	type: 				choice
+	name: 				alias bar 2
+	script: 			card.card_color_2
+	save value: 		false
+	editable: 			false
 extra card field:
 	type: text
 	name: back type hint
@@ -776,3 +832,45 @@ extra card style:
 			size: 10
 			scale down to: 6
 		alignment: right middle
+	vorthos box:
+		right: { if card.pt != "" then 285 else 350 }
+		top: 489
+		width: 140
+		height: {if use_vorthos() then 10 else 0}
+		z index: 900
+		alignment: middle right
+		font:
+			name: Relay-Medium
+			size: 7
+			color: white
+			weight: bold
+	vorthos box 2:
+		right: { if card.pt_2 != "" then 660 else 725 }
+		top: 489
+		width: 140
+		height: {if use_vorthos() then 10 else 0}
+		z index: 900
+		alignment: middle right
+		font:
+			name: Relay-Medium
+			size: 7
+			color: white
+			weight: bold
+	alias bar:
+		left: 37.5
+		top: {if is_legend() then 73 else 61}
+		width: 300
+		height: 21
+		z index: 10
+		render style: image
+		visible: {is_skinned()}
+		image: {module_alias()}
+	alias bar 2:
+		left: 412.5
+		top: {if back_legend() then 73 else 61}
+		width: 300
+		height: 21
+		z index: 10
+		render style: image
+		visible: {is_skinned()}
+		image: {module_alias()}
