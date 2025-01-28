@@ -7,23 +7,26 @@ position hint:		095
 
 version:			2024-10-01
 depends on:
-	package:			magic.mse-game
-	version:			2014-06-25
+	package:		magic.mse-game
+	version:		2014-06-25
 depends on:
-	package:			magic-mana-large.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-large.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-mana-small.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-small.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-mana-ravnica-dossier.mse-symbol-font
-	version:			2024-01-24
+	package:		magic-mana-ravnica-dossier.mse-symbol-font
+	version:		2024-01-24
 depends on:
-	package:			magic-modules.mse-include
-	version:			2024-10-01
+	package:		magic-modules.mse-include
+	version:		2024-10-01
 depends on:
-	package:			magic-mainframe-extras.mse-include
-	version:			2007-09-23
+	package:		magic-mainframe-extras.mse-include
+	version:		2007-09-23
+depends on:
+	package: 		magic-watermarks.mse-include
+	version: 		2016-03-13
 
 card width:			744
 card height:		1039
@@ -31,7 +34,6 @@ card dpi:			297
 
 ### blanks by GenevensiS
 ### code by GenevensiS
-
 ############################################################## Extra scripts
 
 init script:
@@ -75,12 +77,14 @@ init script:
 	[
 		card:			"card/",
 		crown:			"crown/",
+		alias:			"/magic-modules.mse-include/extras/alias/",
 		identity:		"/magic-modules.mse-include/indicators/"
 	]
 	template_suffix :=
 	[
 		card:			"card.png",
 		crown:			"crown.png",
+		alias:			"alias.png",
 		identity:		"identity.png"
 	]
 	template := { template_prefix[type] + input + template_suffix[type] }
@@ -88,10 +92,13 @@ init script:
 	
 	card_background := { color_background(input: card.card_color, type: "card",			base_hybrid: card_hybrid)}@(offset: 0)
 	card_crown := { color_background(input: card.card_color, type: "crown",		base_hybrid: card_hybrid)}@(offset: 0)
+	card_alias := { color_background(input: card.card_color, type: "alias",		base_hybrid: card_hybrid)}@(offset: 0)
 	
 	is_promo := { styling.promo }
 	
 	is_unsorted := { styling.remove_from_autocount }
+	is_skinned := { styling.godzilla_style_alias }
+	use_vorthos := { styling.vorthos_box }
 	
 	is_crowned := { styling.legend_crown == "yes" or (styling.legend_crown == "if legendary" and lang_setting("is_legendary")(card.super_type)) }
 	
@@ -138,12 +145,22 @@ include file: /magic-modules.mse-include/rarities/styling_fields
 include file: /magic-modules.mse-include/watermarks/styling_fields
 
 styling field:
+	type:			boolean
+	name:			godzilla style alias
+	description:	Use a Godzilla-style alias to rename cards?
+	initial:		no
+styling field:
+	type:			boolean
+	name:			vorthos box
+	description: 	Where they put mtgstory.com on story spotlights.
+	initial:		yes
+styling field:
 	type:			package choice
 	name:			overlay
 	description:	Should there be an overlay applied, such as foil?
 	match:			magic-overlay-*.mse-include
 	required:		false
-
+	
 include file: /magic-modules.mse-include/information/styling_fields
 
 styling field:
@@ -271,6 +288,22 @@ card style:
 		width:				{ popout_width() }
 		height:				{ popout_height() }
 		z index:			1010
+	############################# Name line
+	alias:
+		left:	94
+		top: 	122
+		width: 	{if is_skinned() then 550 else 0}
+		height: 42
+		alignment: { (if is_skinned() then "center" else "") + "bottom shrink-overflow"}
+		padding bottom: 0
+		z index: 900
+		angle: -2.3
+		font:
+			name: MPlantin-Italic
+			size: 18
+			style: bold
+			weight: bold
+			color: white
 	############################# Card type
 	indicator:
 		left:				58
@@ -384,6 +417,17 @@ extra card field:
 	editable:			false
 	save value:			false
 	show statistics:	false
+extra card field:
+	type: 				text
+	name: 				vorthos box
+	save value: 		true
+	editable: 			true
+extra card field:
+	type: 				choice
+	name: 				alias bar
+	script: 			card.card_color
+	save value: 		false
+	editable: 			false
 
 extra card style:
 	crown:
@@ -421,3 +465,25 @@ extra card style:
 		z index:			600
 		visible:			{ is_stamped() }
 		mask:				{"border_stamp" + (if stamp_shape() == "triangle" then "_tri" else "") + "_mask.png"}
+	vorthos box:
+		right: { if card.pt != "" then 568 else 690 }
+		top: 977
+		width: 140
+		height: {if use_vorthos() then 10 else 0}
+		z index: 900
+		alignment: middle right
+		font:
+			name: Relay-Medium
+			size: 14
+			color: white
+			weight: bold
+	alias bar:
+		left: 87
+		top: 132
+		width: 580
+		height: 40
+		z index: 400
+		angle: -2.3
+		render style: image
+		visible: {is_skinned()}
+		image: {module_alias()}
