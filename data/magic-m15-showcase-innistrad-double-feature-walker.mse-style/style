@@ -7,20 +7,23 @@ position hint:		095
 
 version:			2024-10-01
 depends on:
-	package:			magic.mse-game
-	version:			2014-06-25
+	package:		magic.mse-game
+	version:		2014-06-25
 depends on:
-	package:			magic-mana-large.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-large.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-mana-small.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-small.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-modules.mse-include
-	version:			2024-10-01
+	package:		magic-modules.mse-include
+	version:		2024-10-01
 depends on:
-	package:			magic-mainframe-extras.mse-include
-	version:			2007-09-23
+	package:		magic-mainframe-extras.mse-include
+	version:		2007-09-23
+depends on:
+	package:		magic-watermarks.mse-include
+	version:		2016-03-13
 
 card width:			744
 card height:		1039
@@ -28,7 +31,6 @@ card dpi:			297
 
 ### blanks by Card Conjurer and GenevensiS
 ### code by GenevensiS
-
 ############################################################## Extra scripts
 
 init script:
@@ -100,12 +102,14 @@ init script:
 	[
 		card:				"card/",
 		cardtall:			"cardtall/",
+		alias:			"/magic-modules.mse-include/extras/alias/doublefeature/",
 		identity:			"/magic-modules.mse-include/indicators/"
 	]
 	template_suffix :=
 	[
 		card:				"card.png",
 		cardtall:			"card.png",
+		alias:				"alias.png",
 		identity:			"identity.png"
 	]
 	template :=
@@ -133,6 +137,8 @@ init script:
 	
 	is_promo :=			{ styling.promo }
 	is_unsorted :=		{ styling.remove_from_autocount }
+	is_skinned := 		{ styling.godzilla_style_alias }
+	use_vorthos := 		{ styling.vorthos_box }
 	
 	chop_top :=			{ split := split_comma(styling.chop_text_box); if length(split) > 0 and split[0] != "" and split[0] != "-" then clamp(split[0], maximum:500, minimum:-500) else 0 }
 	chop_bottom :=		{ split := split_comma(styling.chop_text_box); if length(split) > 1 and split[1] != "" and split[1] != "-" then clamp(split[1], maximum:500, minimum:-500) else 0 }
@@ -182,6 +188,16 @@ include file: /magic-modules.mse-include/rarities/styling_fields
 
 include file: /magic-modules.mse-include/watermarks/styling_fields
 
+styling field:
+	type:			boolean
+	name:			godzilla style alias
+	description:	Use a Godzilla-style alias to rename cards?
+	initial:		no
+styling field:
+	type:			boolean
+	name:			vorthos box
+	description: 	Where they put mtgstory.com on story spotlights.
+	initial:		yes
 styling field:
 	type:			package choice
 	name:			overlay
@@ -243,6 +259,21 @@ card style:
 		width:				{ popout_width() }
 		height:				{ popout_height() }
 		z index:			1010
+	############################# Name line
+	alias:
+		left: { (stylesheet.card_width - 580) / 2 }
+		top: 	93
+		width: 	{if is_skinned() then 580 else 0}
+		height: 42
+		alignment: { (if is_skinned() then "center" else "") + "bottom shrink-overflow"}
+		padding bottom: 0
+		z index: 900
+		font:
+			name: MPlantin-Italic
+			size: 18
+			style: bold
+			weight: bold
+			color: white
 	############################# Text box
 	text:
 		left:				97
@@ -305,6 +336,17 @@ extra card field:
 	save value:			false
 	show statistics:	false
 	choice:				filtered image
+extra card field:
+	type: 				text
+	name: 				vorthos box
+	save value: 		true
+	editable: 			true
+extra card field:
+	type: 				choice
+	name: 				alias bar
+	script: 			card.card_color
+	save value: 		false
+	editable: 			false
 
 extra card style:
 	card stamp rim:
@@ -343,3 +385,24 @@ extra card style:
 		visible:			{ styling.art_filter }
 		render style:		image
 		image:				{ saturate(card.image, amount: -1) }
+	vorthos box:
+		right: 606
+		top: 977
+		width: 140
+		height: {if use_vorthos() then 10 else 0}
+		z index: 900
+		alignment: middle right
+		font:
+			name: Relay-Medium
+			size: 14
+			color: white
+			weight: bold
+	alias bar:
+		left: { (stylesheet.card_width - 616) / 2 }
+		top: 100
+		width: 616
+		height: 42
+		z index: 199
+		render style: image
+		visible: {is_skinned()}
+		image: {module_alias()}
