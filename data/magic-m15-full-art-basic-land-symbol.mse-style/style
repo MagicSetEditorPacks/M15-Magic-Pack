@@ -7,37 +7,72 @@ position hint:		020
 
 version:			2023-08-15
 depends on:
-	package:			magic.mse-game
-	version:			2014-06-25
+	package:		magic.mse-game
+	version:		2014-06-25
 depends on:
-	package:			magic-default-image.mse-include
-	version:			2007-09-23
+	package:		magic-default-image.mse-include
+	version:		2007-09-23
 depends on:
-	package: 			magic-modules.mse-include
-	version: 			2024-10-01
+	package: 		magic-modules.mse-include
+	version: 		2024-10-01
 depends on:
-	package:			magic-mana-large.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-large.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-mana-small.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-small.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-mainframe-extras.mse-include
-	version:			2007-09-23
+	package:		magic-mainframe-extras.mse-include
+	version:		2007-09-23
+depends on:
+	package: 		magic-watermarks.mse-include
+	version: 		2016-03-13
 
 card width:			375
 card height:		523
 card dpi:			150
 
-
 ### blanks by GenevensiS
 ### code by GenevensiS
 ### made from magic-744-60-full-art.mse-style
-
-
 ############################################################## Extra scripts
-
 init script:
+	swap_fonts_pt_default :=
+	[
+		name: {"Beleren Bold"},
+		size: {30.0},
+		color: {"black"},
+		vertical: {0},
+		italic: {"Beleren Bold"}
+	]
+	
+	swap_fonts_body_default :=
+	[
+		name: {"MPlantin"},
+		size: {11.5},
+		color: {"white"},
+		vertical: {0},
+		italic: {"MPlantin-Italic"}
+	]
+
+	swap_fonts_type_default :=
+	[
+		name: {"Beleren Bold"},
+		size: {26.0},
+		color: {"black"},
+		vertical: {0},
+		italic: {""}
+	]
+
+	swap_fonts_name_default :=
+	[
+		name: {"Beleren Bold"},
+		size: {30.0},
+		color: {"black"},
+		vertical: {0},
+		italic: {""}
+	]
+
 	template_prefix :=
 	[
 		crown:			"crown/",
@@ -148,21 +183,17 @@ init script:
 	
 	is_promo := { styling.promo }
 	
-	is_unsorted := { styling.remove_from_autocount }
-
+	is_unsorted := {styling.remove_from_autocount}
 	is_aliased := { card.alias != "" }
+	use_vorthos := { styling.vorthos_box }
 	
 	is_crowned := { styling.legend_crown == "yes" or (styling.legend_crown == "if legendary" and contains(card.super_type, match:"Legendary")) }
 	
 	is_pinlined := { styling.pinlines }
 	
-	chop_top :=		{ split := split_comma(styling.chop_textbox); if length(split) > 0 and split.0 != "" and split.0 != "-" then clamp(to_int(split.0), minimum: -300, maximum: 250) else 0 }
-	chop_bottom :=	{ split := split_comma(styling.chop_textbox); if length(split) > 1 and split.1 != "" and split.1 != "-" then clamp(to_int(split.1), minimum: -300, maximum: 250) else 0 }
-	chop_right :=	{ split := split_comma(styling.chop_textbox); if length(split) > 2 and split.2 != "" and split.2 != "-" then clamp(to_int(split.2), minimum: -300, maximum: 250) else 0 }
-	
-	shrink_name :=	{ if styling.shrink_name_text == "-" then 0 else if styling.shrink_name_text != "" then clamp(to_number(styling.shrink_name_text), minimum: -25, maximum: 14) else 0 }
-	shrink_type :=	{ if styling.shrink_type_text == "-" then 0 else if styling.shrink_type_text != "" then clamp(to_number(styling.shrink_type_text), minimum: -25, maximum: 12) else 0 }
-	
+	chop_top := { split := split_comma(styling.chop_text_box); if length(split) > 0 and split.0 != "" then clamp(split.0, maximum: 1500, minimum: -1500) else 0 }
+	chop_bot := { split := split_comma(styling.chop_text_box); if length(split) > 1 and split.1 != "" then clamp(split.1, maximum: 1500, minimum: -1500) else 0 }
+
 	use_main_rarity := { contains(set.mainframe_rarity_name, match: ".png") }
 	
 	rarity_right :=		{ split := split_comma(styling.rarity_coordinates); if length(split) > 0 and split.0 != "" then clamp(split.0, minimum: 0, maximum: 800) else 344 }
@@ -224,37 +255,9 @@ styling field:
 	name:			stretch art to whole card
 	description:	Make the image span the whole card instead of just the visible part. Use this to help make popout effects.
 	initial:		no
-styling field:
-	type:			text
-	name:			shrink name text
-	description:	Shrinks name X pixels.
-styling field:
-	type:			text
-	name:			shrink type text
-	description:	Shrinks type X pixels.
-styling field:
-	type:			text
-	name:			rule text font size cap
-	description:	Caps the font size of the rules text and the flavor text. Default is 13.
-styling field:
-	type:			choice
-	name:			center rule text
-	description:	When to center text (short text means only on one-line cards with no flavor text)
-	choice:			always
-	choice:			short text only
-	choice:			never
-	initial:		never
-styling field:
-	type:			color
-	name:			text color
-	description:	Use the specified color for the rule text.
-	choice:
-		name:			black
-		color:			rgb(0,0,0)
-	choice:
-		name:			white
-		color:			rgb(255,255,255)
-	initial:		white
+
+include file: /magic-modules.mse-include/texts/styling_fields
+
 styling field:
 	type:			color
 	name:			textbox color
@@ -270,10 +273,6 @@ styling field:
 	type:			text
 	name:			textbox opacity percentage
 	description:	Set the opacity percentage for the textbox background. Opaque is 100, transparent is 0, default is 0.
-styling field:
-	type:			text
-	name:			chop textbox
-	description:	Formatted as "X,Y,Z". Shrinks textbox X pixels from the top, Y from the bottom, and Z from the right.
 styling field:
 	type:			boolean
 	name:			rounded textbox
@@ -295,6 +294,13 @@ styling field:
 	choice:			if legendary
 	choice:			no
 	initial:		if legendary
+
+include file: /magic-modules.mse-include/stamps/styling_fields
+
+include file: /magic-modules.mse-include/rarities/styling_fields
+
+include file: /magic-modules.mse-include/watermarks/styling_fields
+
 styling field:
 	type:			boolean
 	name:			pinlines
@@ -314,6 +320,11 @@ styling field:
 	choice:			no
 	initial:		only copyright
 styling field:
+	type:			boolean
+	name:			vorthos box
+	description: 	Where they put mtgstory.com on story spotlights.
+	initial:		yes
+styling field:
 	type:			package choice
 	name:			overlay
 	description:	Should there be an overlay applied, such as foil?
@@ -332,93 +343,19 @@ styling field:
 	type:			text
 	name:			rarity coordinates
 	description:	The coordinates for the set symbol, formatted as "right,top,size". Default is 344,445,22.
-styling field:
-	type:			boolean
-	name:			remove from autocount
-	description:	Removes the automatic card number for specific cards, to allow for overcounted cards like in Planeswalker Decks.
-	initial:		no
-styling field:
-	type:			boolean
-	name:			promo
-	description:	Is this card a promo card, with the "P" rarity?
-	initial:		no
-styling field:
-	type:			color
-	name:			copyright text color
-	description:	Color of the copyright, illustrator, and set code text.
-	choice:			white
-	choice:			black
-	initial:		white
-	allow custom:	true
-styling field:
-	type:			boolean
-	name:			use ancestral mana symbols
-	description:	Enables ancestral's modified generic mana.
-	initial:		no
-styling field:
-	type:			boolean
-	name:			use guild mana symbols
-	description:	Use the Ravnica guild symbols instead of the official half/half circles for hybrid mana.
-	initial:		no
-styling field:
-	type:			choice
-	name:			tap symbol
-	description:	What tap and untap symbols should be used on cards?
-	choice:			modern
-	choice:			old
-	choice:			diagonal T
-	initial:		modern
-styling field:
-	type:			package choice
-	name:			casting cost mana symbols
-	description:	Symbols used in the casting cost.
-	match:			magic-mana-*.mse-symbol-font
-	initial:		magic-mana-large.mse-symbol-font
-styling field:
-	type:			package choice
-	name:			text box mana symbols
-	description:	Symbols used in the rule text and flavor text.
-	match:			magic-mana-*.mse-symbol-font
-	initial:		magic-mana-small.mse-symbol-font
-styling field:
-	type:			text
-	name:			name font
-	description:	Font used for the name, alias, type, pt, and transformation reminder. Hover your mouse over the font file to see it's details, and write it's Title here.
-styling field:
-	type:			text
-	name:			text font
-	description:	Font used for the rule text. Hover your mouse over the font file to see it's details, and write it's Title here.
-styling field:
-	type:			text
-	name:			text italic font
-	description:	Font used for the flavor text and reminder texts. Hover your mouse over the font file to see it's details, and write it's Title here.
-styling style:
-	use guild mana symbols:
-		choice images:
-			yes:				/magic-mana-small.mse-symbol-font/mana_guild_rg.png
-			no:					/magic-mana-small.mse-symbol-font/mana_rg.png
-	tap symbol:
-		render style:	both
-		choice images:
-			modern:				/magic-mana-large.mse-symbol-font/mana_t.png
-			old:				/magic-mana-large.mse-symbol-font/mana_t_old.png
-			diagonal T:			/magic-mana-large.mse-symbol-font/mana_t_older.png
-	center rule text:
-		render style:	both
-		choice images:
-			always:				/magic.mse-game/icons/center-all-text.png
-			short text only:	/magic.mse-game/icons/center-short-text.png
-			never:				/magic.mse-game/icons/center-no-text.png
-	inverted common symbol:
-		choice images:
-			no:					{ symbol_variation(symbol: set.symbol, variation: "common") }
-			yes:				{ symbol_variation(symbol: set.symbol, variation: "invertedcommon") }
 
+include file: /magic-modules.mse-include/information/styling_fields
 
+include file: /magic-modules.mse-include/symbol-fonts/styling_fields
+
+include file: /magic-modules.mse-include/fonts/styling_fields
 ############################################################## Card fields
 include file: /magic-modules.mse-include/corners/card_fields
+
 include file: /magic-modules.mse-include/information/card_fields
+
 include file: /magic-modules.mse-include/separators/card_fields
+
 include file: /magic-modules.mse-include/stamps/card_fields
 
 card style:
@@ -528,7 +465,7 @@ card style:
 	text:
 		left:				33
 		top:				{ 315 + chop_top() }
-		right:				{ 341 - chop_right() }
+		right:				341
 		bottom:				{ 435 - chop_bottom() }
 		z index:			1000
 		line height hard:	{ if is_modal(card.rule_text) then 0.9 else 1.2 }
@@ -538,27 +475,27 @@ card style:
 		line height line max:	1.6
 		alignment:
 			script:
-				if (styling.center_rule_text == "short text only" and
+				if (styling.center_text == "short text only" and
 				   not contains(match:"\n", card.rule_text) and
 				   card.flavor_text == "<i-flavor></i-flavor>" and
 				   card_style.text.content_lines <= 2) or
-				   styling.center_rule_text == "always"
+				   styling.center_text == "always"
 				then "middle center"
 				else "middle left"
 		font:
-			name:				MPlantin
-			italic name:		MPlantin-Italic
-			size:				{ if styling.rule_text_font_size_cap != "" then to_number(styling.rule_text_font_size_cap) else 13 }
-			scale down to:		7
-			color:				{ styling.text_color }
+			name:				{ body_font() }
+			italic name:		{ body_font_italic() }
+			size:				{ body_font_size() }
+			scale down to:		12
+			color:				{ body_font_color() }
 		symbol font:
 			name:				{ styling.text_box_mana_symbols }
-			size:				{ if styling.rule_text_font_size_cap != "" then to_number(styling.rule_text_font_size_cap) else 13 }
-			scale down to:		7
+			size:				{ body_font_size() }
+			scale down to:		12
 	watermark:
-		left:				10
-		top:				{ 315 + chop_top() }
-		right:				355
+		left:				0
+		top:				315
+		right:				375
 		bottom:				437
 		z index:			600
 		render style:		image
@@ -714,6 +651,11 @@ extra card field:
 	editable:			false
 	save value:			false
 	show statistics:	false
+extra card field:
+	type: 				text
+	name: 				vorthos box
+	save value: 		true
+	editable: 			true
 
 extra card style:
 	card shadow:
@@ -885,3 +827,15 @@ extra card style:
 		visible:			{ styling.overlay != "none" and styling.overlay != "" }
 		render style:		image
 		image:				{ if styling.overlay == "" then "" else styling.overlay + "/overlay.png" }
+	vorthos box:
+		right: 345
+		top: 489
+		width: 140
+		height: {if use_vorthos() then 10 else 0}
+		z index: 900
+		alignment: middle right
+		font:
+			name: Relay-Medium
+			size: 7
+			color: white
+			weight: bold

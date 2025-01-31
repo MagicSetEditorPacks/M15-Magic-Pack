@@ -254,8 +254,8 @@ card style:
 			color: white
 	############################# Text box
 	text:
-		left: 31
-		top: {325-(-chop_top())}
+		left: 34
+		top: {330-(-chop_top())}
 		width: 310
 		bottom: {if is_revamped() then 495-chop_bot() else 460-chop_bot()}
 		font:
