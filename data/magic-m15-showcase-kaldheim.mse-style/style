@@ -1,34 +1,37 @@
-﻿mse version: 2.0.0
-game: magic
-short name: Vikings
-full name: Kaldheim Showcase
-icon: card-sample.png
-installer group: magic/m15 style/normal cards
-position hint: 095
+﻿mse version:		2.0.0
+game: 				magic
+short name: 		Vikings
+full name: 			Kaldheim Showcase
+icon: 				card-sample.png
+installer group: 	magic/m15 style/normal cards
+position hint: 		095
 
-version: 2024-09-01
+version:			2024-09-01
 depends on:
-	package: magic.mse-game
-	version: 2014-06-25
+	package:		magic.mse-game
+	version:		2014-06-25
 depends on:
-	package: magic-default-image.mse-include
-	version: 2007-09-23
+	package:		magic-default-image.mse-include
+	version:		2007-09-23
 depends on:
-	package: magic-modules.mse-include
-	version: 2024-10-01
+	package:		magic-modules.mse-include
+	version:		2024-10-01
 depends on:
-	package: magic-mana-large.mse-symbol-font
-	version: 2007-09-23
+	package:		magic-mana-large.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package: magic-mana-small.mse-symbol-font
-	version: 2007-09-23
+	package:		magic-mana-small.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package: magic-mainframe-extras.mse-include
-	version: 2007-09-23
+	package:		magic-mainframe-extras.mse-include
+	version:		2007-09-23
+depends on:
+	package:		magic-watermarks.mse-include
+	version:		2016-03-13
 
-card width: 375
-card height: 523
-card dpi: 150
+card width: 		375
+card height: 		523
+card dpi: 			150
 ####### images from digiman
 ############################################################## Extra scripts
 init script:
@@ -42,9 +45,10 @@ init script:
 	mask_multi_land_with_color := { styling.colored_multicolor_land_name }
 	
 	template_prefix := [
-		card: ""
+		card: "card/"
 		card2: "legend/"
-		pt: ""
+		pt: "pt/"
+		alias: "/magic-modules.mse-include/extras/alias/"
 		stamp: "/magic-modules.mse-include/stamps/backs/375 round/"
 		ubstamp: "/magic-modules.mse-include/stamps/backs/375 ub/"
 		identity: "/magic-modules.mse-include/indicators/"
@@ -53,6 +57,7 @@ init script:
 		card: "card.png"
 		card2: "card.png"
 		pt: "pt.png"
+		alias: "alias.png"
 		stamp: "stamp.png"
 		ubstamp: "stamp.png"
 		identity: "identity.png"
@@ -61,8 +66,9 @@ init script:
 	land_template := { template_prefix[type] + (if input == "a" then "c" else input) + template_suffix[type] }
 	# Use land templates for previews because they show more contrast
 	hybrid_previews := "land,hybrid"
-	legend_background := { color_background(type:"card2",     base_hybrid:card_hybrid) }
-	card_ptbox := { color_background(type:"pt",     base_hybrid:card_hybrid) }
+	legend_background := { color_background(type:"card2", base_hybrid:card_hybrid) }
+	card_ptbox := { color_background(type:"pt", base_hybrid:card_hybrid) }
+	card_alias := { color_background(type:"alias", base_hybrid:card_hybrid) }
 
 	# Use the normal tap symbol
 	mana_t := {
@@ -85,25 +91,17 @@ init script:
 	}
 	ancestral_mana := { styling.ancestral_mana_symbols }
 	watermark_include := "/magic-modules.mse-include/watermarks"
-	is_unsorted := {styling.remove_from_autocount}
+	is_unsorted := { styling.remove_from_autocount }
+	is_skinned := { styling.godzilla_style_alias }
+	use_vorthos := { styling.vorthos_box }
 
-	chop_top := {to_number(pull_comma_array(styling.text_chops, cell:0, end:false))}
-	chop_bot := {to_number(pull_comma_array(styling.text_chops, cell:1, end:false))}
-	chop_correction := { chop_bot() }
-	shrink_type := {if styling.shrink_typeline_text != "" then to_number(styling.shrink_typeline_text) else 0}
-	shrink_name := {if styling.shrink_name_text != "" then to_number(styling.shrink_name_text) else 0}
+	chop_top := { split := split_comma(styling.chop_text_box); if length(split) > 0 and split.0 != "" then clamp(split.0, maximum: 1500, minimum: -1500) else 0 }
+	chop_bot := { split := split_comma(styling.chop_text_box); if length(split) > 1 and split.1 != "" then clamp(split.1, maximum: 1500, minimum: -1500) else 0 }
+
 	use_main_rarity := { contains(set.mainframe_rarity_name, match: ".png")}
 	un_png := replace@(match:".png", replace: "")
 	is_vehicle := {lang_setting("is_vehicle")(card.sub_type)}
 	card_stamp_offset_top_1 := {1}
-
-	include file: /magic-modules.mse-include/loyalty/init_script
-	loyalty_abilities_count_real := loyalty_abilities_count
-	loyalty_abilities_count := {
-		if mainframe_walker() then loyalty_abilities_count_real(instance:instance, active:active) else 0
-	}@(active:false, instance:1)
-	mainframe_walker := { lang_setting("is_planeswalker")(card.type) }
-	loyalty_textbox_mask := {"walker_mask.png"}
 ############################################################## Set info fields
 set info style:
 	symbol:
@@ -114,46 +112,20 @@ set info style:
 			fill color:   rgb(255,255,255)
 			border color: rgb(0,0,0)
 ############################################################## Extra style options
-styling field:
-	type: text
-	name: text chops
-	description: Format as "X,Y". Shrinks textbox X pixels from the top and Y from bottom.
-styling field:
-	type: text
-	name: shrink name text
-	description: Shrinks name X pixels
-styling field:
-	type: text
-	name: shrink typeline text
-	description: Shrinks type X pixels
+include file: /magic-modules.mse-include/watermarks/styling_fields
+
+include file: /magic-modules.mse-include/rarities/styling_fields
+
+include file: /magic-modules.mse-include/texts/styling_fields
+
 styling field:
 	type: boolean
 	name: remove from autocount
 	description: Removes the automatic card number for specific cards, to allow for overcounted cards like in Planeswalker Decks.
 	initial: no
+
 include file: /magic-modules.mse-include/stamps/styling_fields
-styling field:
-	type:			choice
-	name:			number of textboxes
-	description:	Number of textboxes for abilities and passives. MODIFY CONTENTS OF TEXTBOXES IF THIS HAS TROUBLE UPDATING AFTER BEING CHANGED.
-	choice:			automatic
-	choice:			1
-	choice:			2
-	choice:			3
-	choice:			4
-	choice:			5
-	choice:			6
-	choice:			7
-	choice:			8
-	initial:		automatic
-styling field:
-	type:			text
-	name:			move separators
-	description:	Moves the limits between abilities down by this many pixels. Use negatives to move up. Formatted as "1,2,3,4,5"
-styling field:
-	type:			text
-	name:			move loyalty costs
-	description:	Moves loyalty costs down by this many pixels. Use negatives to move up. Formatted as "1,2,3,4,5,6"
+
 styling field:
 	type:			text
 	name:			textbox opacity percentage
@@ -205,6 +177,16 @@ styling field:
 	name: unsorted casting cost
 	description: Disables automatic mana symbol sorting.
 	initial: no
+styling field:
+	type:			boolean
+	name:			godzilla style alias
+	description:	Use a Godzilla-style alias to rename cards?
+	initial:		no
+styling field:
+	type:			boolean
+	name:			vorthos box
+	description: 	Where they put mtgstory.com on story spotlights.
+	initial:		yes
 styling field:
 	type: boolean
 	name: ancestral mana symbols
@@ -283,13 +265,18 @@ styling style:
 			no:  { symbol_variation(symbol: set.symbol, variation: "common") }
 			yes: { symbol_variation(symbol: set.symbol, variation: "invertedcommon") }
 ############################################################## Card fields
-include file: /magic-modules.mse-include/corners/card_fields
 include file: /magic-modules.mse-include/information/card_fields
+
 include file: /magic-modules.mse-include/stamps/card_fields
-include file: /magic-modules.mse-include/stamps/stamp_back
+
+include file: /magic-modules.mse-include/corners/card_fields
+
 include file: /magic-modules.mse-include/watermarks/card_fields
+
 include file: /magic-modules.mse-include/separators/card_fields
-include file: /magic-modules.mse-include/loyalty/card_fields
+
+include file: /magic-modules.mse-include/stamps/stamp_back
+
 card style:
 	############################# Background stuff
 	border color:
@@ -309,7 +296,7 @@ card style:
 		top:	0
 		width:	375
 		height:	523
-		z index: 0
+		z index: 20
 		render style: image
 		popup style: in place
 		image: { if is_legend() then legend_background() else card_background() }
@@ -319,13 +306,13 @@ card style:
 		left: 26
 		top: {if is_legend() then 33 else 22}
 		right:  { 341 - card_style.casting_cost.content_width }
-		height: {23 - 0.5*shrink_name()}
+		height: 23
 		alignment: bottom shrink-overflow
 		padding bottom: 0
 		z index: 900
 		font:
 			name: Beleren Bold
-			size: {15 - shrink_name()}
+			size: 15
 			color: white
 	casting cost:
 		right: 346
@@ -343,6 +330,20 @@ card style:
 		always symbol: true
 		z index: 920
 		padding top: 0
+	alias:
+		left: { (stylesheet.card_width - 185) / 2 }
+		top: 	{if is_legend() then 47 else 35}
+		width: 	{if is_skinned() then 185 else 0}
+		height: 42
+		alignment: { (if is_skinned() then "center" else "") + "bottom shrink-overflow"}
+		padding bottom: 0
+		z index: 900
+		font:
+			name: MPlantin-Italic
+			size: 9
+			style: bold
+			weight: bold
+			color: white
 	############################# Image
 	image:
 		left: 39
@@ -364,20 +365,20 @@ card style:
 		image: { module_identity() }
 	type:
 		left: { if has_identity() then "46" else "28" }
-		top: {shrink_type() + 305 }
+		top: 305
 		width: { (if has_identity() then "290" else "310") - max(22,card_style.rarity.content_width) }
-		height: { 20 - shrink_type() }
+		height: 20
 		alignment: top shrink-overflow
 		z index: 900
 		padding top: 2
 		font:
 			name: Beleren Bold
-			size: {13 - shrink_type()}
+			size: 13
 			color: white
 			separator color: red
 	rarity:
 		right: 344
-		top: 308
+		top: 307
 		width: 44
 		height: 22
 		z index: 950
@@ -450,6 +451,17 @@ extra card field:
 	editable: false
 	save value: false
 	show statistics: false
+extra card field:
+	type: 				text
+	name: 				vorthos box
+	save value: 		true
+	editable: 			true
+extra card field:
+	type: 				choice
+	name: 				alias bar
+	script: 			card.card_color
+	save value: 		false
+	editable: 			false
 
 extra card style:
 	pt box:
@@ -479,3 +491,24 @@ extra card style:
 		image: {(if is_legend() then "legend/" else "") + "voverlay.png" }
 		z index: 0
 		visible: {is_vehicle()}
+	vorthos box:
+		right: { if card.pt != "" then 285 else 350 }
+		top: 489
+		width: 140
+		height: {if use_vorthos() then 10 else 0}
+		z index: 900
+		alignment: middle right
+		font:
+			name: Relay-Medium
+			size: 7
+			color: white
+			weight: bold
+	alias bar:
+		left: { (stylesheet.card_width - 300) / 2 }
+		top: {if is_legend() then 73 else 61}
+		width: 300
+		height: 21
+		z index: 10
+		render style: image
+		visible: {is_skinned()}
+		image: {module_alias()}

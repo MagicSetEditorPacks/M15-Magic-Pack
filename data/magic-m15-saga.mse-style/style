@@ -8,20 +8,23 @@ position hint: 010
 
 version: 2024-09-23
 depends on:
-	package: magic.mse-game
-	version: 2014-06-25
+	package: 		magic.mse-game
+	version: 		2014-06-25
 depends on:
-	package: magic-modules.mse-include
-	version: 2024-10-01
+	package: 		magic-modules.mse-include
+	version: 		2024-10-01
 depends on:
-	package: magic-mana-large.mse-symbol-font
-	version: 2007-09-23
+	package: 		magic-mana-large.mse-symbol-font
+	version: 		2007-09-23
 depends on:
-	package: magic-mana-small.mse-symbol-font
-	version: 2007-09-23
+	package: 		magic-mana-small.mse-symbol-font
+	version: 		2007-09-23
 depends on:
-	package: magic-mainframe-extras.mse-include
-	version: 2018-01-01
+	package: 		magic-mainframe-extras.mse-include
+	version: 		2018-01-01
+depends on:
+	package: 		magic-watermarks.mse-include
+	version: 		2016-03-13
 
 card width: 375
 card height: 523
@@ -38,20 +41,22 @@ init script:
 		nyx:"/magic-modules.mse-include/trims/nyx/",
 		snow:"/magic-modules.mse-include/trims/snow/",
 		beyond:"/magic-modules.mse-include/trims/beyond/",
+		alias:				"/magic-modules.mse-include/extras/alias/",
 		crown:"/magic-modules.mse-include/crowns/375/",
 		star: "/magic-modules.mse-include/trims/star/",
 		identity: "/magic-modules.mse-include/indicators/"
 	]
 	template_suffix := [
-		card: "card.jpg"
-		snow:"snow.png"
-		pt:"pt.png"
-		mark: "mark.png"
-		stamp: "stamp.png"
-		nyx:"nyx.png"
-		beyond:"beyond.png"
-		crown:"crown.png"
-		star: "star.png"
+		card: "card.jpg",
+		snow:"snow.png",
+		pt:"pt.png",
+		mark: "mark.png",
+		stamp: "stamp.png",
+		nyx:"nyx.png",
+		beyond:"beyond.png",
+		alias: "alias.png",
+		crown:"crown.png",
+		star: "star.png",
 		identity: "identity.png"
 	]
 	template := { 
@@ -73,8 +78,11 @@ init script:
 		crown: true,
 		star:true
 	]
-	watermark_include := "/magic-modules.mse-include/watermarks"
-	is_unsorted := {styling.remove_from_autocount}
+
+	is_unsorted := { styling.remove_from_autocount }
+	is_skinned := { chosen(styling.other_options, choice:"godzilla style alias") }
+	use_vorthos := { chosen(styling.other_options, choice:"vorthos box") }
+
 	# Use the normal tap symbol
 	mana_t := {
 		if      styling.tap_symbol == "old"        then "old"
@@ -385,6 +393,9 @@ styling field:
 	choice: custom border
 	choice: use starting loyalty
 	choice: remove bookmark
+	choice: godzilla style alias
+	choice: vorthos box
+	initial: vorthos box
 styling field:
 	type: text
 	name: custom border source
@@ -583,6 +594,20 @@ card style:
 		always symbol: true
 		z index: 920
 		padding top: 0
+	alias:
+		left: { (stylesheet.card_width - 325) / 2 }
+		top: 	53
+		width: 	{if is_skinned() then 325 else 0}
+		height: 20
+		alignment: { (if is_skinned() then "center" else "") + "bottom shrink-overflow"}
+		padding bottom: 0
+		z index: 1100
+		font:
+			name: MPlantin-Italic
+			size: 9
+			style: bold
+			weight: bold
+			color: white
 	level 9 text:
 		left: 190
 		width: {if not is_class() or card.level_2_text == "​" then 0 else 80}
@@ -763,7 +788,7 @@ card style:
 		line height line max: 1.6
 	chapter text:
 		left: {30+(if is_class() then 158 else 0)}
-		top: 60
+		top: {if is_skinned() then 78 else 60 }
 		width: {if is_case() then 0 else 153}
 		bottom: {if un_marked() then 60 else chapter0()}
 		z index: 900
@@ -1172,6 +1197,18 @@ extra card field:
 	script: card.card_color
 	editable: false
 	save value: false
+extra card field:
+	type: text
+	name: vorthos box
+	save value: true
+	editable: true
+extra card field:
+	type: choice
+	name: alias bar
+	script: card.card_color
+	save value: false
+	editable: false
+
 extra card style:
 	pt box:
 		left: 273
@@ -1475,3 +1512,24 @@ extra card style:
 		image: { beyond_background() }
 		mask: beyond_mask.png
 		visible: { is_beyond() }
+	vorthos box:
+		right: { if card.pt != "" then 278 else 350 }
+		top: 489
+		width: 140
+		height: {if use_vorthos() then 10 else 0}
+		z index: 900
+		alignment: middle right
+		font:
+			name: Relay-Medium
+			size: 7
+			color: white
+			weight: bold
+	alias bar:
+		left: { (stylesheet.card_width - 320) / 2 }
+		top: 57
+		width: 320
+		height: 20
+		z index: 299
+		render style: image
+		visible: {is_skinned()}
+		image: {module_alias()}

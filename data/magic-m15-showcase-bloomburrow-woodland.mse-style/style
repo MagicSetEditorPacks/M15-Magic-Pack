@@ -7,20 +7,23 @@ position hint:		095
 
 version:			2024-10-01
 depends on:
-	package:			magic.mse-game
-	version:			2014-06-25
+	package:		magic.mse-game
+	version:		2014-06-25
 depends on:
-	package:			magic-mana-large.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-large.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-mana-small.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-small.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-modules.mse-include
-	version:			2024-10-01
+	package:		magic-modules.mse-include
+	version:		2024-10-01
 depends on:
-	package:			magic-mainframe-extras.mse-include
-	version:			2007-09-23
+	package:		magic-mainframe-extras.mse-include
+	version:		2007-09-23
+depends on:
+	package: 		magic-watermarks.mse-include
+	version: 		2016-03-13
 
 card width:			744
 card height:		1039
@@ -151,7 +154,7 @@ init script:
 		card:				"card/",
 		pt:					"pt/",
 		crown:				"crown/",
-		alias:				"alias/",
+		alias:				"/magic-modules.mse-include/extras/alias/",
 		stamp:				"stamp/",
 		nonstamp:			"nonstamp/"
 		identity:			"/magic-modules.mse-include/indicators/",
@@ -197,6 +200,8 @@ init script:
 	is_promo := { styling.promo }
 	
 	is_unsorted := { styling.remove_from_autocount }
+	is_skinned := { styling.godzilla_style_alias }
+	use_vorthos := { styling.vorthos_box }
 	
 	is_crowned := { styling.legend_crown == "yes" or (styling.legend_crown == "if legendary" and lang_setting("is_legendary")(card.super_type)) }
 	
@@ -257,19 +262,30 @@ include file: /magic-modules.mse-include/rarities/styling_fields
 include file: /magic-modules.mse-include/stamps/styling_fields
 
 include file: /magic-modules.mse-include/indicators/styling_fields
+
 include file: /magic-modules.mse-include/watermarks/styling_fields
 
+styling field:
+	type:			boolean
+	name:			colored border
+	description:	Use a border color that adapts to card color?
+	initial:		no
+styling field:
+	type:			boolean
+	name:			godzilla style alias
+	description:	Use a Godzilla-style alias to rename cards?
+	initial:		no
+styling field:
+	type:			boolean
+	name:			vorthos box
+	description: 	Where they put mtgstory.com on story spotlights.
+	initial:		yes
 styling field:
 	type:			package choice
 	name:			overlay
 	description:	Should there be an overlay applied, such as foil?
 	match:			magic-overlay-*.mse-include
 	required:		false
-styling field:
-	type:			boolean
-	name:			colored border
-	description:	Use a border color that adapts to card color?
-	initial:		yes
 
 include file: /magic-modules.mse-include/information/styling_fields
 
@@ -328,6 +344,21 @@ card style:
 		width:				{ popout_width() }
 		height:				{ popout_height() }
 		z index:			1010
+	############################# Name line
+	alias:
+		left: { (stylesheet.card_width - 570) / 2 }
+		top: 	104
+		width: 	{if is_skinned() then 570 else 0}
+		height: 42
+		alignment: { (if is_skinned() then "center" else "") + "bottom shrink-overflow"}
+		padding bottom: 0
+		z index: 900
+		font:
+			name: MPlantin-Italic
+			size: 18
+			style: bold
+			weight: bold
+			color: white
 	############################# Text box
 	text:
 		left:				65
@@ -359,7 +390,7 @@ card style:
 			name:				{ styling.text_box_mana_symbols }
 			size:				{ body_font_size() }
 			scale down to:		7
-	############################# PT
+############################# PT
 	pt:
 		left:				594
 		top:				{ 931 + pt_font_vertical() }
@@ -374,7 +405,6 @@ card style:
 			separator color:	red
 
 ############################################################## Extra card fields
-
 extra card field:
 	type:				choice
 	name:				crown
@@ -424,6 +454,18 @@ extra card field:
 	save value:			false
 	show statistics:	false
 	choice:				card colored border
+extra card field:
+	type: 				text
+	name: 				vorthos box
+	save value: 		true
+	editable: 			true
+extra card field:
+	type: 				choice
+	name: 				alias bar
+	script: 			card.card_color
+	save value: 		false
+	editable: 			false
+
 extra card style:
 	pt box:
 		left:				0
@@ -488,3 +530,24 @@ extra card style:
 		render style:		image
 		image:				{ card_border() }
 		mask:				border_mask.png
+	vorthos box:
+		right: { if card.pt != "" then 568 else 690 }
+		top: 976
+		width: 140
+		height: {if use_vorthos() then 10 else 0}
+		z index: 900
+		alignment: middle right
+		font:
+			name: Relay-Medium
+			size: 14
+			color: white
+			weight: bold
+	alias bar:
+		left: { (stylesheet.card_width - 596) / 2 }
+		top: 112
+		width: 596
+		height: 42
+		z index: 200
+		render style: image
+		visible: {is_skinned()}
+		image: {module_alias()}

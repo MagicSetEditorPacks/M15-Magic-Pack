@@ -7,20 +7,20 @@ position hint:		095
 
 version:			2024-10-01
 depends on:
-	package:			magic.mse-game
-	version:			2014-06-25
+	package:		magic.mse-game
+	version:		2014-06-25
 depends on:
-	package:			magic-mana-large.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-large.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-mana-small.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-small.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-modules.mse-include
-	version:			2024-10-01
+	package:		magic-modules.mse-include
+	version:		2024-10-01
 depends on:
-	package:			magic-mainframe-extras.mse-include
-	version:			2007-09-23
+	package:		magic-mainframe-extras.mse-include
+	version:		2007-09-23
 
 card width:			744
 card height:		1039
@@ -106,7 +106,7 @@ init script:
 		card2:				"card_crunched/",
 		pt:					"pt/",
 		crown:				"crown/",
-		alias:				"alias/",
+		alias:				"/magic-modules.mse-include/extras/alias/",
 		stamp:				"stamp/",
 		nonstamp:			"nonstamp/"
 		identity:			"/magic-modules.mse-include/indicators/",
@@ -152,8 +152,9 @@ init script:
 	is_promo := { styling.promo }
 	
 	is_unsorted := { styling.remove_from_autocount }
+	is_skinned := { styling.godzilla_style_alias }
+	use_vorthos := { styling.vorthos_box }
 
-	
 	is_crowned := { styling.legend_crown == "yes" or (styling.legend_crown == "if legendary" and lang_setting("is_legendary")(card.super_type)) }
 	
 	chop_top := { split := split_comma(styling.chop_text_box); if length(split) > 0 and split.0 != "" then clamp(split.0, maximum: 1500, minimum: -1500) else 0 }
@@ -198,12 +199,20 @@ styling field:
 	choice:			no
 	initial:		no
 
-include file: /magic-modules.mse-include/stamps/styling_fields
-
 include file: /magic-modules.mse-include/rarities/styling_fields
 
 include file: /magic-modules.mse-include/watermarks/styling_fields
 
+styling field:
+	type:			boolean
+	name:			godzilla style alias
+	description:	Use a Godzilla-style alias to rename cards?
+	initial:		no
+styling field:
+	type:			boolean
+	name:			vorthos box
+	description: 	Where they put mtgstory.com on story spotlights.
+	initial:		yes
 styling field:
 	type:			package choice
 	name:			overlay
@@ -263,6 +272,8 @@ styling style:
 			modern:				/magic-modules.mse-include/symbol-fonts/tap_new.png
 			old:				/magic-modules.mse-include/symbol-fonts/tap_old.png
 			diagonal T:			/magic-modules.mse-include/symbol-fonts/tap_older.png
+
+include file: /magic-modules.mse-include/stamps/styling_fields
 
 include file: /magic-modules.mse-include/fonts/styling_fields
 
@@ -327,6 +338,20 @@ card style:
 		symbol font:
 			name:				{ styling.casting_cost_mana_symbols }
 			size:				29
+	alias:
+		left: { (stylesheet.card_width - 675) / 2 }
+		top: 	160
+		width: 	{if is_skinned() then 675 else 0}
+		height: 49
+		alignment: { (if is_skinned() then "center" else "") + "bottom shrink-overflow"}
+		padding bottom: 0
+		z index: 900
+		font:
+			name: MPlantin-Italic
+			size: 20
+			style: bold
+			weight: bold
+			color: white
 	############################# Image
 	image:
 		left:				{ if styling.stretch_image_to_whole_card then 0							else 38 }
@@ -416,6 +441,17 @@ extra card field:
 	save value:			false
 	show statistics:	false
 	choice:				foil layer
+extra card field:
+	type: 				text
+	name: 				vorthos box
+	save value: 		true
+	editable: 			true
+extra card field:
+	type: 				choice
+	name: 				alias bar
+	script: 			card.card_color
+	save value: 		false
+	editable: 			false
 
 extra card style:
 	pt box:
@@ -461,3 +497,24 @@ extra card style:
 		visible:			{ styling.overlay != "none" and styling.overlay != "" }
 		render style:		image
 		image:				{ if styling.overlay == "" then "" else styling.overlay + "/overlay.png" }
+	vorthos box:
+		right: { if card.pt != "" then 563 else 700 }
+		top: 976
+		width: 140
+		height: {if use_vorthos() then 10 else 0}
+		z index: 900
+		alignment: middle right
+		font:
+			name: Relay-Medium
+			size: 14
+			color: white
+			weight: bold
+	alias bar:
+		left: { (stylesheet.card_width - 675) / 2 }
+		top: 172
+		width: 675
+		height: 49
+		z index: 199
+		render style: image
+		visible: {is_skinned()}
+		image: {module_alias()}

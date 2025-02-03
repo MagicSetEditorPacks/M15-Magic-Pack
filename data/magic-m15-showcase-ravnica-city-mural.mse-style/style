@@ -1,26 +1,29 @@
 ﻿mse version:		2.1.2
 game:				magic
-short name:			City Murual
+short name:			City Mural
 full name:			Ravnica Showcase
 icon:				card_sample.png
 position hint:		095
 
 version:			2024-10-01
 depends on:
-	package:			magic.mse-game
-	version:			2014-06-25
+	package:		magic.mse-game
+	version:		2014-06-25
 depends on:
-	package:			magic-mana-large.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-large.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-mana-small.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-small.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-modules.mse-include
-	version:			2024-10-01
+	package:		magic-modules.mse-include
+	version:		2024-10-01
 depends on:
-	package:			magic-mainframe-extras.mse-include
-	version:			2007-09-23
+	package:		magic-mainframe-extras.mse-include
+	version:		2007-09-23
+depends on:
+	package: 		magic-watermarks.mse-include
+	version: 		2016-03-13
 
 card width:			646
 card height:		902
@@ -28,7 +31,6 @@ card dpi:			258.5
 
 ### blanks by GenevensiS
 ### code by GenevensiS
-
 ############################################################## Extra scripts
 
 init script:
@@ -79,6 +81,9 @@ init script:
 		vertical: {0},
 		italic: {""}
 	]
+
+	old_card_hybrid := card_hybrid
+	module_alias := { color_background(type:"alias", base_hybrid: old_card_hybrid, folder: template_prefix["alias"])}
 	
 	card_hybrid_2 :=
 	{
@@ -103,15 +108,30 @@ init script:
 		vertical:	card_hybrid["vertical"]
 	]
 	
-	template_prefix := [card: "card/", pt: "pt/", crown: "crown/", identity: "/magic-modules.mse-include/indicators/"]
-	template_suffix := [card: "card.png", pt: "pt.png", crown: "crown.png", identity: "identity.png"]
+	template_prefix :=
+	[
+		card:			"card/",
+		crown:			"crown/",
+		pt:				"pt/",
+		alias: 			"/magic-modules.mse-include/extras/alias/ravnica/",
+		identity:		"/magic-modules.mse-include/indicators/"
+	]
+	template_suffix :=
+	[
+		card:			"card.png",
+		crown:			"crown.png",
+		pt:				"pt.png",
+		alias:			"alias.png",
+		identity:		"identity.png"
+	]
 	template := { template_prefix[type] + input + template_suffix[type] }
 	land_template := { template_prefix[type] + (if input == "a" then "c" else input) + template_suffix[type] }
 	
 	card_background :=	{ color_background(input: card.card_color, type: "card",	base_hybrid: card_hybrid) }
 	card_crown :=		{ color_background(input: card.card_color, type: "crown",	base_hybrid: card_hybrid) }
-	card_ptbox :=		{ color_background(input: card.card_color, type: "pt",		base_hybrid: card_hybrid) }
-	
+	card_alias :=		{ color_background(input: card.card_color, type: "alias",	base_hybrid: card_hybrid) }
+	card_ptbox :=		{ color_background(input: card.card_color, type: "pt",			base_hybrid: card_hybrid) }
+
 	pure_colors :=
 	{
 		sort_text(
@@ -129,6 +149,8 @@ init script:
 	is_promo := { styling.promo }
 	
 	is_unsorted := { styling.remove_from_autocount }
+	is_skinned := { styling.godzilla_style_alias }
+	use_vorthos := { styling.vorthos_box }
 	
 	is_crowned := { styling.legend_crown == "yes" or (styling.legend_crown == "if legendary" and lang_setting("is_legendary")(card.super_type)) }
 	
@@ -186,6 +208,16 @@ include file: /magic-modules.mse-include/rarities/styling_fields
 include file: /magic-modules.mse-include/watermarks/styling_fields
 
 styling field:
+	type:			boolean
+	name:			godzilla style alias
+	description:	Use a Godzilla-style alias to rename cards?
+	initial:		no
+styling field:
+	type:			boolean
+	name:			vorthos box
+	description: 	Where they put mtgstory.com on story spotlights.
+	initial:		yes
+styling field:
 	type:			package choice
 	name:			overlay
 	description:	Should there be an overlay applied, such as foil?
@@ -227,13 +259,13 @@ card style:
 		right width:		40
 		top width:			60
 		bottom width:		90
-		z index:			0
+		z index:			1
 	card color:
 		left:				0
 		top:				0
 		width:				{ stylesheet.card_width }
 		height:				{ stylesheet.card_height }
-		z index:			1
+		z index:			100
 		render style:		image
 		popup style:		in place
 		image:				{ card_background() }
@@ -244,7 +276,7 @@ card style:
 		top:				{ if styling.stretch_image_to_whole_card then 0							else 102 }
 		width:				{ if styling.stretch_image_to_whole_card then stylesheet.card_width		else 549 }
 		height:				{ if styling.stretch_image_to_whole_card then stylesheet.card_height	else 395 }
-		z index:			10
+		z index:			150
 		mask:				{ if styling.stretch_image_to_whole_card then "image_mask_full.png" else "image_mask.png" }
 	mainframe image:
 		left:				{ popout_left() }
@@ -252,6 +284,21 @@ card style:
 		width:				{ popout_width() }
 		height:				{ popout_height() }
 		z index:			1010
+	############################# Name line
+	alias:
+		left: { (stylesheet.card_width - 550) / 2 }
+		top: 	86
+		width: 	{if is_skinned() then 550 else 0}
+		height: 42
+		alignment: { (if is_skinned() then "center" else "") + "bottom shrink-overflow"}
+		padding bottom: 0
+		z index: 900
+		font:
+			name: MPlantin-Italic
+			size: 16
+			style: bold
+			weight: bold
+			color: white
 	############################# Text box
 	text:
 		left:				52
@@ -304,10 +351,10 @@ card style:
 extra card field:
 	type:				choice
 	name:				pt box
-	script:				card.card_color
 	editable:			false
 	save value:			false
 	show statistics:	false
+	choice:				pt box
 extra card field:
 	type:				choice
 	name:				crown
@@ -336,6 +383,17 @@ extra card field:
 	save value:			false
 	show statistics:	false
 	choice:				card stamp background
+extra card field:
+	type: 				text
+	name: 				vorthos box
+	save value: 		true
+	editable: 			true
+extra card field:
+	type: 				choice
+	name: 				alias bar
+	script: 			card.card_color
+	save value: 		false
+	editable: 			false
 
 extra card style:
 	pt box:
@@ -343,7 +401,7 @@ extra card style:
 		top:				0
 		width:				{ stylesheet.card_width }
 		height:				{ stylesheet.card_height }
-		z index:			40
+		z index:			840
 		visible:			{ card.pt != "" }
 		render style:		image
 		image:
@@ -353,7 +411,7 @@ extra card style:
 				color := pt_colors()
 				if color == "gold" and count > 1 then template("m", type: "pt")
 				else if color == "land" and count > 1 then template("c", type: "pt")
-				else if color == "hybrid" and count == 2 then masked_blend(mask: if contains(card.card_color, match: "vertical") then "special_blend_pt_vertical.png" else "special_blend_pt.png", dark: template(pure.0, type: "pt"), light: template(pure.1, type: "pt"))
+				else if color == "hybrid" and count == 2 then masked_blend(mask: "special_blend_pt.png", dark: template(pure.0, type: "pt"), light: template(pure.1, type: "pt"))
 				else card_ptbox()
 	crown:
 		left:				0
@@ -391,3 +449,24 @@ extra card style:
 		visible:			{ is_stamped() }
 		render style:		image
 		image:				stamp_background.png
+	vorthos box:
+		right: { if card.pt != "" then 493 else 590 }
+		top: 847
+		width: 140
+		height: {if use_vorthos() then 10 else 0}
+		z index: 900
+		alignment: middle right
+		font:
+			name: Relay-Medium
+			size: 12
+			color: white
+			weight: bold
+	alias bar:
+		left: 60
+		top: 102
+		width: { stylesheet.card_width - 120 }
+		height: 34
+		z index: 165
+		render style: image
+		visible: {is_skinned()}
+		image: {module_alias()}
