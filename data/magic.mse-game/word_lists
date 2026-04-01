@@ -640,31 +640,70 @@ word list:
 	word: 
 		script: lang_setting("word_list_planeswalker")
 	word:
+		name: Last Seen on Arcavios
+		word: Dellian
+		word: Kasmina
+		word: Liliana
+		word: Ral
+	word:
+		name: Last Seen on Lorwyn
+		word: Ajani
+		word: Oko
+	word:
+		name: Last Seen in the Edge
+		word: Tezzeret
+	word:
+		name: Last Seen on Tarkir
+		word: Narset
+		word: Sarkhan
+		word: Ugin
+	word:
+		name: Last Seen on Avishkar
+		word: Basri
+		word: Chandra
+		name: Daretti
+		word: Yanling
+	word:
+		name: Last Seen on Duskmourn
+		word: Aminatou
+		word: Kaito
+		word: Niko
+		word: Tyvar
+	word:
+		name: Last Seen on Thunder Junction
+		word: Jace
+		word: Vraska
+	word:
+		name: Last Seen on Ravnica
+		word: Angrath
+		word: Bolas
+		word: Gideon
+		word: Davriel
+		word: Domri
+		word: Dovin
+		word: Kaya
+		word: Teyo
+		word: Yanggu
+	word:
 		name: Last Seen on Ixalan
 		word: Huatli
+		word: Quintorius
 		word: Saheeli
 	word:
 		name: Last Seen on Eldraine
 		word: Ashiok
 		word: Garruk
-		word: Oko
 		word: Rowan
 		word: Will
 	word:
 		name: Last Seen on New Phyrexia
-		word: Chandra
 		word: Elspeth
-		word: Jace
-		word: Kaito
-		word: Kaya
 		word: Koth
 		word: Lukka
 		word: Nahiri
 		word: Nissa
 		word: Teferi
-		word: Tyvar
 		word: Venser
-		word: Vraska
 		word: Wrenn
 	word:
 		name: Last Seen in the Past
@@ -674,7 +713,6 @@ word list:
 		word: Comet
 	word: 
 		name: Last Seen on Dominaria
-		word: Ajani
 		word: Dihada
 		word: Jared
 		word: Jaya
@@ -686,7 +724,6 @@ word list:
 		word: Nixilis
 	word:
 		name: Last Seen on Kamigawa
-		word: Tezzeret
 		word: Tamiyo		
 	word:
 		name: Last Seen on Innistrad
@@ -703,46 +740,20 @@ word list:
 		word: Tasha
 		word: Zariel
 	word:
-		name: Last Seen on Arcavios
-		word: Kasmina
-		word: Liliana
-	word:
 		name: Last Seen on Kaldheim
-		word: Niko
 		word: Tibalt
 	word:
 		name: Last Seen on Zendikar
 		word: Kiora
 	word:
-		name: Last Seen on Ikoria
-		word: Narset
-	word:
 		name: Last Seen on Theros
-		word: Ashiok
 		word: Calix
 		word: Xenagos
 	word:
-		name: Last Seen on Ravnica
-		word: Angrath
-		word: Bolas
-		word: Gideon
-		word: Davriel
-		word: Domri
-		word: Dovin
-		word: Ral
-		word: Sarkhan
-		word: Samut
-		word: Teyo
-		word: Ugin
-		word: Yanggu
-		word: Yanling
-	word:
 		name: Last Seen on Fiore
 		name: Dack
-		name: Daretti
 	word:
 		name: Last Seen on ???
-		word: Aminatou
 		word: Estrid
 		word: Grist
 	word:
@@ -854,33 +865,37 @@ word list:
 				word:
 					script: lang_setting("word_lists_race").19
 			word:
-				name: Si-Sz
+				name: Si-Su
 				word:
 					script: lang_setting("word_lists_race").20
+			word:
+				name: Sy-Sz
+				word:
+					script: lang_setting("word_lists_race").21
 		word:
 			name: T
 			word:
-				script: lang_setting("word_lists_race").21
+				script: lang_setting("word_lists_race").22
 		word:
 			name: U
 			word:
-				script: lang_setting("word_lists_race").22
+				script: lang_setting("word_lists_race").23
 		word:
 			name: V
 			word:
-				script: lang_setting("word_lists_race").23
+				script: lang_setting("word_lists_race").24
 		word:
 			name: W
 			word:
-				script: lang_setting("word_lists_race").24
+				script: lang_setting("word_lists_race").25
 		word:
 			name: Y
 			word:
-				script: lang_setting("word_lists_race").25
+				script: lang_setting("word_lists_race").26
 		word:
 			name: Z
 			word:
-				script: lang_setting("word_lists_race").26
+				script: lang_setting("word_lists_race").27
 
 
 word list:
@@ -895,11 +910,11 @@ word list:
 			word:
 				script: lang_setting("word_lists_class").0
 		word:
-			name: D-J
+			name: D-I
 			word:
 				script: lang_setting("word_lists_class").1
 		word:
-			name: K-P
+			name: J-P
 			word:
 				script: lang_setting("word_lists_class").2
 		word:
@@ -1014,47 +1029,51 @@ word list:
 			word:
 				script: lang_setting("word_lists_race").15
 		word:
-			name: R
+			name: Q
 			word:
 				script: lang_setting("word_lists_race").16
 		word:
+			name: R
+			word:
+				script: lang_setting("word_lists_race").17
+		word:
 			name: S
 			word:
-				name: Sa-Sk
-				word:
-					script: lang_setting("word_lists_race").17
-			word:
-				name: Sl-Sq
+				name: Sa-Si
 				word:
 					script: lang_setting("word_lists_race").18
 			word:
-				name: St-Sz
+				name: Sk-So
 				word:
 					script: lang_setting("word_lists_race").19
+			word:
+				name: Sp-Sz
+				word:
+					script: lang_setting("word_lists_race").20
 		word:
 			name: T
 			word:
-				script: lang_setting("word_lists_race").20
+				script: lang_setting("word_lists_race").21
 		word:
 			name: U
 			word:
-				script: lang_setting("word_lists_race").21
+				script: lang_setting("word_lists_race").22
 		word:
 			name: V
 			word:
-				script: lang_setting("word_lists_race").22
+				script: lang_setting("word_lists_race").23
 		word:
 			name: W
 			word:
-				script: lang_setting("word_lists_race").23
+				script: lang_setting("word_lists_race").24
 		word:
 			name: Y
 			word:
-				script: lang_setting("word_lists_race").24
+				script: lang_setting("word_lists_race").25
 		word:
 			name: Z
 			word:
-				script: lang_setting("word_lists_race").25
+				script: lang_setting("word_lists_race").26
 
 
 word list:
@@ -1069,11 +1088,11 @@ word list:
 			word:
 				script: lang_setting("word_lists_class").0
 		word:
-			name: D-K
+			name: D-J
 			word:
 				script: lang_setting("word_lists_class").1
 		word:
-			name: L-N
+			name: K-N
 			word:
 				script: lang_setting("word_lists_class").2
 		word:
@@ -1152,11 +1171,11 @@ word list:
 		word:
 			name: E
 			word:
-				name: Ef-Es
+				name: Ec-Er
 				word:
 					script: lang_setting("word_lists_race").5
 			word:
-				name: Et-Ez
+				name: Es-Ez
 				word:
 					script: lang_setting("word_lists_race").6
 		word:
@@ -1328,85 +1347,95 @@ word list:
 		word:
 			name: E
 			word:
-				script: lang_setting("word_lists_race").5
+				name: Ec-Et
+				word:
+					script: lang_setting("word_lists_race").5
+			word:
+				name: Ev-Ez
+				word:
+					script: lang_setting("word_lists_race").6
 		word:
 			name: F
 			word:
-				script: lang_setting("word_lists_race").6
+				script: lang_setting("word_lists_race").7
 		word:
 			name: G
 			word:
-				script: lang_setting("word_lists_race").7
+				script: lang_setting("word_lists_race").8
 		word:
 			name: H
 			word:
-				script: lang_setting("word_lists_race").8
+				script: lang_setting("word_lists_race").9
 		word:
 			name: I
 			word:
-				script: lang_setting("word_lists_race").9
+				script: lang_setting("word_lists_race").10
 		word:
 			name: J
 			word:
-				script: lang_setting("word_lists_race").10
+				script: lang_setting("word_lists_race").11
 		word:
 			name: K
 			word:
-				script: lang_setting("word_lists_race").11
+				script: lang_setting("word_lists_race").12
 		word:
 			name: L
 			word:
-				script: lang_setting("word_lists_race").12
+				script: lang_setting("word_lists_race").13
 		word:
 			name: M
 			word:
-				script: lang_setting("word_lists_race").13
+				script: lang_setting("word_lists_race").14
 		word:
 			name: N
 			word:
-				script: lang_setting("word_lists_race").14
+				script: lang_setting("word_lists_race").15
 		word:
 			name: O
 			word:
-				script: lang_setting("word_lists_race").15
+				script: lang_setting("word_lists_race").16
 		word:
 			name: P
 			word:
-				script: lang_setting("word_lists_race").16
+				script: lang_setting("word_lists_race").17
 		word:
 			name: R
 			word:
-				script: lang_setting("word_lists_race").17
+				script: lang_setting("word_lists_race").18
 		word:
 			name: S
 			word:
 				name: Sa-Sl
 				word:
-					script: lang_setting("word_lists_race").18
+					script: lang_setting("word_lists_race").19
 			word:
 				name: So-Sz
 				word:
-					script: lang_setting("word_lists_race").19
+					script: lang_setting("word_lists_race").20
 		word:
 			name: T
 			word:
-				script: lang_setting("word_lists_race").20
-		word:
-			name: V
-			word:
 				script: lang_setting("word_lists_race").21
 		word:
-			name: W
+			name: U
 			word:
 				script: lang_setting("word_lists_race").22
 		word:
-			name: Y
+			name: V
 			word:
 				script: lang_setting("word_lists_race").23
 		word:
-			name: Z
+			name: W
 			word:
 				script: lang_setting("word_lists_race").24
+		word:
+			name: Y
+			word:
+				script: lang_setting("word_lists_race").25
+		word:
+			name: Z
+			word:
+				script: lang_setting("word_lists_race").26
 
 
 word list:
@@ -1421,25 +1450,21 @@ word list:
 			word:
 				script: lang_setting("word_lists_class").0
 		word:
-			name: C-D
+			name: C-E
 			word:
 				script: lang_setting("word_lists_class").1
 		word:
-			name: E-L
+			name: G-M
 			word:
 				script: lang_setting("word_lists_class").2
 		word:
-			name: M-O
+			name: N-R
 			word:
 				script: lang_setting("word_lists_class").3
 		word:
-			name: P-R
-			word:
-				script: lang_setting("word_lists_class").4
-		word:
 			name: S-Z
 			word:
-				script: lang_setting("word_lists_class").5
+				script: lang_setting("word_lists_class").4
 
 
 word list:
@@ -1556,43 +1581,47 @@ word list:
 				word:
 					script: lang_setting("word_lists_race").17
 		word:
-			name: R
+			name: Q
 			word:
 				script: lang_setting("word_lists_race").18
+		word:
+			name: R
+			word:
+				script: lang_setting("word_lists_race").19
 		word:
 			name: S
 			word:
 				name: Sa-Se
 				word:
-					script: lang_setting("word_lists_race").19
+					script: lang_setting("word_lists_race").20
 			word:
 				name: Sf-Sz
 				word:
-					script: lang_setting("word_lists_race").20
+					script: lang_setting("word_lists_race").21
 		word:
 			name: T
 			word:
-				script: lang_setting("word_lists_race").21
+				script: lang_setting("word_lists_race").22
 		word:
 			name: U
 			word:
-				script: lang_setting("word_lists_race").22
+				script: lang_setting("word_lists_race").23
 		word:
 			name: V
 			word:
-				script: lang_setting("word_lists_race").23
+				script: lang_setting("word_lists_race").24
 		word:
 			name: W
 			word:
-				script: lang_setting("word_lists_race").24
+				script: lang_setting("word_lists_race").25
 		word:
 			name: Y
 			word:
-				script: lang_setting("word_lists_race").25
+				script: lang_setting("word_lists_race").26
 		word:
 			name: Z
 			word:
-				script: lang_setting("word_lists_race").26
+				script: lang_setting("word_lists_race").27
 
 
 word list:
@@ -1607,15 +1636,15 @@ word list:
 			word:
 				script: lang_setting("word_lists_class").0
 		word:
-			name: C-F
+			name: C-G
 			word:
 				script: lang_setting("word_lists_class").1
 		word:
-			name: G-M
+			name: I-O
 			word:
 				script: lang_setting("word_lists_class").2
 		word:
-			name: N-R
+			name: P-R
 			word:
 				script: lang_setting("word_lists_class").3
 		word:
@@ -2038,89 +2067,97 @@ word list:
 	word:
 		name: 모든 종
 		word:
+			name: M
+			word:
+				script: lang_setting("word_lists_race").0
+		word:
 			name: ᄀ
 			word:
-				name: 가 - 고
-				word:
-					script: lang_setting("word_lists_race").0
-			word:
-				name: 과 - ᄀᄒ
+				name: 가 - 게
 				word:
 					script: lang_setting("word_lists_race").1
+			word:
+				name: 고 - 그
+				word:
+					script: lang_setting("word_lists_race").2
+			word:
+				name: 기 - ᄀᄒ
+				word:
+					script: lang_setting("word_lists_race").3
 		word:
 			name: ᄂ
 			word:
-				script: lang_setting("word_lists_race").2
+				script: lang_setting("word_lists_race").4
 		word:
 			name: ᄃ
 			word:
-				script: lang_setting("word_lists_race").3
+				script: lang_setting("word_lists_race").5
 		word:
 			name: ᄅ
 			word:
-				script: lang_setting("word_lists_race").4
+				script: lang_setting("word_lists_race").6
 		word:
 			name: ᄆ
 			word:
-				script: lang_setting("word_lists_race").5
+				script: lang_setting("word_lists_race").7
 		word:
 			name: ᄇ
 			word:
-				script: lang_setting("word_lists_race").6
+				script: lang_setting("word_lists_race").8
 		word:
 			name: ᄉ
 			word:
 				name: 사 - 수
 				word:
-					script: lang_setting("word_lists_race").7
+					script: lang_setting("word_lists_race").9
 			word:
 				name: 스 - ᄉᄒ
 				word:
-					script: lang_setting("word_lists_race").8
+					script: lang_setting("word_lists_race").10
 		word:
 			name: ᄋ
 			word:
 				name: 아 - 어
 				word:
-					script: lang_setting("word_lists_race").9
+					script: lang_setting("word_lists_race").11
 			word:
 				name: 에 - 우
 				word:
-					script: lang_setting("word_lists_race").10
+					script: lang_setting("word_lists_race").12
 			word:
 				name: 워 - ᄋᄒ
 				word:
-					script: lang_setting("word_lists_race").11
+					script: lang_setting("word_lists_race").13
 		word:
 			name: ᄌ
 			word:
-				script: lang_setting("word_lists_race").12
+				script: lang_setting("word_lists_race").14
 		word:
 			name: ᄎ
 			word:
-				script: lang_setting("word_lists_race").13
+				script: lang_setting("word_lists_race").15
 		word:
 			name: ᄏ
 			word:
-				script: lang_setting("word_lists_race").14
+				script: lang_setting("word_lists_race").16
 		word:
 			name: ᄐ
 			word:
-				script: lang_setting("word_lists_race").15
+				script: lang_setting("word_lists_race").17
 		word:
 			name: ᄑ
 			word:
-				script: lang_setting("word_lists_race").16
+				script: lang_setting("word_lists_race").18
 		word:
 			name: ᄒ
 			word:
 				name: 하 - 화
 				word:
-					script: lang_setting("word_lists_race").17
+					script: lang_setting("word_lists_race").19
 			word:
 				name: 흐 - ᄒᄒ
 				word:
-					script: lang_setting("word_lists_race").18
+					script: lang_setting("word_lists_race").20
 
 
 word list:
@@ -2534,59 +2571,59 @@ word list:
 	word:
 		name: 所有物种
 		word:
-			name: 三-凡
+			name: M-兔
 			word:
 				script: lang_setting("word_lists_race").0
 		word:
-			name: 凤-哈
+			name: 凡-吉
 			word:
 				script: lang_setting("word_lists_race").1
 		word:
-			name: 四-害
+			name: 后-奴
 			word:
 				script: lang_setting("word_lists_race").2
 		word:
-			name: 家-恶
+			name: 宁-异
 			word:
 				script: lang_setting("word_lists_race").3
 		word:
-			name: 惊-梦
+			name: 怪-松
 			word:
 				script: lang_setting("word_lists_race").4
 		word:
-			name: 植-灵
+			name: 树-浣
 			word:
 				script: lang_setting("word_lists_race").5
 		word:
-			name: 熊-猴
+			name: 海-狮
 			word:
 				script: lang_setting("word_lists_race").6
 		word:
-			name: 猿-穿
+			name: 狼-矮
 			word:
 				script: lang_setting("word_lists_race").7
 		word:
-			name: 突-自
+			name: 石-维
 			word:
 				script: lang_setting("word_lists_race").8
 		word:
-			name: 臭-蝙
+			name: 绵-蛞
 			word:
 				script: lang_setting("word_lists_race").9
 		word:
-			name: 蟹-野
+			name: 蛭-豪
 			word:
 				script: lang_setting("word_lists_race").10
 		word:
-			name: 钳-骷
+			name: 豺-非
 			word:
 				script: lang_setting("word_lists_race").11
 		word:
-			name: 鬣-墨
+			name: 章-魔
 			word:
 				script: lang_setting("word_lists_race").12
 		word:
-			name: 鼹-龟
+			name: 鱼-龟
 			word:
 				script: lang_setting("word_lists_race").13
 
@@ -2654,59 +2691,59 @@ word list:
 	word:
 		name: 所有物種
 		word:
-			name: 三-分
+			name: M-凡
 			word:
 				script: lang_setting("word_lists_race").0
 		word:
-			name: 化-塔
+			name: 分-哈
 			word:
 				script: lang_setting("word_lists_race").1
 		word:
-			name: 塞-山
+			name: 四-密
 			word:
 				script: lang_setting("word_lists_race").2
 		word:
-			name: 巨-振
+			name: 寇-惡
 			word:
 				script: lang_setting("word_lists_race").3
 		word:
-			name: 攻-氣
+			name: 拉-欧
 			word:
 				script: lang_setting("word_lists_race").4
 		word:
-			name: 水-牆
+			name: 殭-熊
 			word:
 				script: lang_setting("word_lists_race").5
 		word:
-			name: 牛-玩
+			name: 牆-獵
 			word:
 				script: lang_setting("word_lists_race").6
 		word:
-			name: 異-索
+			name: 獾-精
 			word:
 				script: lang_setting("word_lists_race").7
 		word:
-			name: 紫-荷
+			name: 索-臭
 			word:
 				script: lang_setting("word_lists_race").8
 		word:
-			name: 蓋-蠕
+			name: 苏-蟹
 			word:
 				script: lang_setting("word_lists_race").9
 		word:
-			name: 袋-郊
+			name: 蠍-造
 			word:
 				script: lang_setting("word_lists_race").10
 		word:
-			name: 野-驚
+			name: 道-馴
 			word:
 				script: lang_setting("word_lists_race").11
 		word:
-			name: 骆-鳳
+			name: 駱-鱆
 			word:
 				script: lang_setting("word_lists_race").12
 		word:
-			name: 鸚-龜
+			name: 鱷-龜
 			word:
 				script: lang_setting("word_lists_race").13
 
