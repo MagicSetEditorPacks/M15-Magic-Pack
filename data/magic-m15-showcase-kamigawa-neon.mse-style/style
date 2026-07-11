@@ -7,20 +7,20 @@ position hint:		095
 
 version:			2024-09-19
 depends on:
-	package:			magic.mse-game
-	version:			2014-06-25
+	package:		magic.mse-game
+	version:		2014-06-25
 depends on:
-	package:			magic-mana-large.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-large.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-mana-small.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-small.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-modules.mse-include
-	version:			2024-10-01
+	package:		magic-modules.mse-include
+	version:		2024-10-01
 depends on:
-	package:			magic-mainframe-extras.mse-include
-	version:			2007-09-23
+	package:		magic-mainframe-extras.mse-include
+	version:		2007-09-23
 
 card width:			750
 card height:		1046
@@ -184,7 +184,32 @@ init script:
 		)
 		else input
 	}
-
+	alias_offset_top_1 := {8}
+	alias_colors := {
+		[
+			w: rgb(237, 230, 190),
+			u: rgb(11, 130, 150),
+			b: rgb(109, 23, 132),
+			r: rgb(171, 0, 65),
+			g: rgb(6, 116, 2),
+			a: rgb(152, 208, 218),
+			m: rgb(254, 187, 4),
+			c: rgb(191, 174, 163)
+		][input]
+	}
+	module_alias := {
+		template := alias_custom_template
+		land_template := alias_custom_land_template
+		color_background(
+			type: "alias",
+			base_hybrid: card_hybrid,
+			artifact_blend: "black",
+			hybrid_blend: "white",
+			multicolor_blend: "black"
+		)
+	}
+	
+	watermark_include := "/magic-modules.mse-include/watermarks"
 ############################################################## Extra style options
 
 styling field:
@@ -317,6 +342,8 @@ include file: /magic-modules.mse-include/namelines/card_fields
 include file: /magic-modules.mse-include/typelines/card_fields
 
 include file: /magic-modules.mse-include/loyalty/card_fields
+
+include file: /magic-modules.mse-include/alias/card_fields_under
 
 card style:
 	############################# Background stuff

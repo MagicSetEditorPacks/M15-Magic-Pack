@@ -7,23 +7,26 @@ position hint:		020
 
 version:			2023-08-15
 depends on:
-	package:			magic.mse-game
-	version:			2014-06-25
+	package:		magic.mse-game
+	version:		2014-06-25
 depends on:
-	package:			magic-default-image.mse-include
-	version:			2007-09-23
+	package:		magic-default-image.mse-include
+	version:		2007-09-23
 depends on:
-	package: 			magic-modules.mse-include
-	version: 			2024-10-01
+	package: 		magic-modules.mse-include
+	version: 		2024-10-01
 depends on:
-	package:			magic-mana-large.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-large.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-mana-small.mse-symbol-font
-	version:			2007-09-23
+	package:		magic-mana-small.mse-symbol-font
+	version:		2007-09-23
 depends on:
-	package:			magic-mainframe-extras.mse-include
-	version:			2007-09-23
+	package:		magic-mainframe-extras.mse-include
+	version:		2007-09-23
+depends on:
+	package:		magic-watermarks.mse-include
+	version:		2024-01-29
 
 card width:			375
 card height:		523
@@ -34,10 +37,55 @@ card dpi:			150
 ### code by GenevensiS
 ### made from magic-744-60-full-art.mse-style
 
-
 ############################################################## Extra scripts
 
 init script:
+	swap_fonts_pt_default :=
+	[
+		name: {"Beleren Bold"},
+		size: {16.0},
+		color: {"black"},
+		vertical: {0},
+		italic: {"Beleren Bold"}
+	]
+	
+	swap_fonts_body_default :=
+	[
+		name: {"MPlantin"},
+		size: {14.0},
+		color: {"white"},
+		vertical: {0},
+		italic: {"MPlantin-Italic"}
+	]
+	
+	swap_fonts_type_default :=
+	[
+		name: {"Beleren Bold"},
+		size: {13.0},
+		color: {"black"},
+		vertical: {0},
+		italic: {""}
+	]
+	
+	swap_fonts_name_default :=
+	[
+		name: {"Beleren Bold"},
+		size: {16.0},
+		color: {"black"},
+		vertical: {0},
+		italic: {""}
+	]
+	
+	swap_fonts_name2_default :=
+	[
+		name: {"MPlantin-Italic"},
+		size: {9.0},
+		color: {"white"},
+		vertical: {0},
+		italic: {"MPlantin-Italic"}
+	]
+	swap_fonts_name2_src := { styling.custom_alias_font or else "" }
+	
 	template_prefix :=
 	[
 		crown:			"crown/",
@@ -155,19 +203,17 @@ init script:
 	is_crowned := { styling.legend_crown == "yes" or (styling.legend_crown == "if legendary" and contains(card.super_type, match:"Legendary")) }
 	
 	is_pinlined := { styling.pinlines }
+	is_backdrop := { styling.pinlines or styling.smaller_backdrop }
 	
 	chop_top :=		{ split := split_comma(styling.chop_textbox); if length(split) > 0 and split.0 != "" and split.0 != "-" then clamp(to_int(split.0), minimum: -300, maximum: 250) else 0 }
 	chop_bottom :=	{ split := split_comma(styling.chop_textbox); if length(split) > 1 and split.1 != "" and split.1 != "-" then clamp(to_int(split.1), minimum: -300, maximum: 250) else 0 }
 	chop_right :=	{ split := split_comma(styling.chop_textbox); if length(split) > 2 and split.2 != "" and split.2 != "-" then clamp(to_int(split.2), minimum: -300, maximum: 250) else 0 }
 	
-	shrink_name :=	{ if styling.shrink_name_text == "-" then 0 else if styling.shrink_name_text != "" then clamp(to_number(styling.shrink_name_text), minimum: -25, maximum: 14) else 0 }
-	shrink_type :=	{ if styling.shrink_type_text == "-" then 0 else if styling.shrink_type_text != "" then clamp(to_number(styling.shrink_type_text), minimum: -25, maximum: 12) else 0 }
-	
 	use_main_rarity := { contains(set.mainframe_rarity_name, match: ".png") }
 	
-	rarity_right :=		{ split := split_comma(styling.rarity_coordinates); if length(split) > 0 and split.0 != "" then clamp(split.0, minimum: 0, maximum: 800) else 344 }
-	rarity_top :=		{ split := split_comma(styling.rarity_coordinates); if length(split) > 1 and split.1 != "" then clamp(split.1, minimum: 0, maximum: 1100) else 445 }
-	rarity_size :=		{ split := split_comma(styling.rarity_coordinates); if length(split) > 2 and split.2 != "" then clamp(split.2, minimum: 0, maximum: 1100) else 22 }
+	rarity_right :=		{ split := 344 }
+	rarity_top :=		{ split := 445 }
+	rarity_size :=		{ split := 22 }
 	rarity_left :=		{ rarity_right() - rarity_size() }
 	
 	popout_left :=		{ split := split_comma(styling.popout_art_coordinates); if length(split) > 3 and split.0 != "" then clamp(split.0, minimum: -300,	maximum: 400) else 0 }
@@ -184,9 +230,9 @@ init script:
 		else 1.0
 	}
 	
-	textbox_left := { if is_pinlined() then 25 else 0 }
-	textbox_width := { if is_pinlined() then 325 else 375 }
-	textbox_height := { if is_pinlined() then 442 else 523 }
+	textbox_left := { if is_backdrop() then 25 else 0 }
+	textbox_width := { if is_backdrop() then 325 else 375 }
+	textbox_height := { if is_backdrop() then 442 else 523 }
 	textbox_image := { set_alpha(recolor_image("textbox.png", color: styling.textbox_color), alpha: get_alpha(styling.textbox_opacity_percentage, default: 0))  }
 	textbox_mask :=
 	{
@@ -199,19 +245,6 @@ init script:
 		base := if is_pinlined() then "mask_pinline_extended.png" else "mask_pinline.png"
 		if is_crowned() then combine_blend(image1: "mask_shadow_crown.png", image2: base, combine: "multiply") else base
 	}
-
-
-############################################################## Set info fields
-
-set info style:
-	symbol:
-		variation:
-			name:				invertedcommon
-			border radius:		0.10
-			fill type:			solid
-			fill color:			rgb(255,255,255)
-			border color:		rgb(0,0,0)
-
 
 ############################################################## Extra style options
 
@@ -226,35 +259,11 @@ styling field:
 	initial:		no
 styling field:
 	type:			text
-	name:			shrink name text
-	description:	Shrinks name X pixels.
-styling field:
-	type:			text
-	name:			shrink type text
-	description:	Shrinks type X pixels.
-styling field:
-	type:			text
-	name:			rule text font size cap
-	description:	Caps the font size of the rules text and the flavor text. Default is 13.
-styling field:
-	type:			choice
-	name:			center rule text
-	description:	When to center text (short text means only on one-line cards with no flavor text)
-	choice:			always
-	choice:			short text only
-	choice:			never
-	initial:		never
-styling field:
-	type:			color
-	name:			text color
-	description:	Use the specified color for the rule text.
-	choice:
-		name:			black
-		color:			rgb(0,0,0)
-	choice:
-		name:			white
-		color:			rgb(255,255,255)
-	initial:		white
+	name:			chop textbox
+	description:	Formatted as "X,Y,Z". Shrinks textbox X pixels from the top, Y from the bottom, and Z from the right.
+
+include file: /magic-modules.mse-include/texts/styling_fields
+
 styling field:
 	type:			color
 	name:			textbox color
@@ -271,10 +280,6 @@ styling field:
 	name:			textbox opacity percentage
 	description:	Set the opacity percentage for the textbox background. Opaque is 100, transparent is 0, default is 0.
 styling field:
-	type:			text
-	name:			chop textbox
-	description:	Formatted as "X,Y,Z". Shrinks textbox X pixels from the top, Y from the bottom, and Z from the right.
-styling field:
 	type:			boolean
 	name:			rounded textbox
 	description:	Should the textbox background have rounded corners?
@@ -288,17 +293,14 @@ styling field:
 	choice:			blend
 	initial:		gold
 styling field:
-	type:			choice
-	name:			legend crown
-	description:	Use the legend crown?
-	choice:			yes
-	choice:			if legendary
-	choice:			no
-	initial:		if legendary
-styling field:
 	type:			boolean
 	name:			pinlines
 	description:	Use pinlines on the side?
+	initial:		no
+styling field:
+	type:			boolean
+	name:			smaller backdrop
+	description:	Use the smaller backdrop without pinlines?
 	initial:		no
 styling field:
 	type:			boolean
@@ -314,112 +316,54 @@ styling field:
 	choice:			no
 	initial:		only copyright
 styling field:
+	type:			choice
+	name:			legend crown
+	description:	Use the legend crown?
+	choice:			yes
+	choice:			if legendary
+	choice:			no
+	initial:		if legendary
+
+include file: /magic-modules.mse-include/stamps/styling_fields
+
+include file: /magic-modules.mse-include/rarities/styling_fields
+
+include file: /magic-modules.mse-include/watermarks/styling_fields
+
+styling field:
 	type:			package choice
 	name:			overlay
 	description:	Should there be an overlay applied, such as foil?
 	match:			magic-overlay-*.mse-include
 	required:		false
-styling field:
-	type:			boolean
-	name:			inverted common symbol
-	description:	Should the common rarity symbol be inverted, like in Coldsnap?
-	initial:		no
-styling field:
-	type:			text
-	name:			alt rarity color
-	description:	Use a custom color for the rarity symbol. Formatted as "R1,G1,B1:R2,G2,B2:..." 1 and 2 are fill color, 3 and 4 border color
-styling field:
-	type:			text
-	name:			rarity coordinates
-	description:	The coordinates for the set symbol, formatted as "right,top,size". Default is 344,445,22.
-styling field:
-	type:			boolean
-	name:			remove from autocount
-	description:	Removes the automatic card number for specific cards, to allow for overcounted cards like in Planeswalker Decks.
-	initial:		no
-styling field:
-	type:			boolean
-	name:			promo
-	description:	Is this card a promo card, with the "P" rarity?
-	initial:		no
-styling field:
-	type:			color
-	name:			copyright text color
-	description:	Color of the copyright, illustrator, and set code text.
-	choice:			white
-	choice:			black
-	initial:		white
-	allow custom:	true
-styling field:
-	type:			boolean
-	name:			use ancestral mana symbols
-	description:	Enables ancestral's modified generic mana.
-	initial:		no
-styling field:
-	type:			boolean
-	name:			use guild mana symbols
-	description:	Use the Ravnica guild symbols instead of the official half/half circles for hybrid mana.
-	initial:		no
-styling field:
-	type:			choice
-	name:			tap symbol
-	description:	What tap and untap symbols should be used on cards?
-	choice:			modern
-	choice:			old
-	choice:			diagonal T
-	initial:		modern
-styling field:
-	type:			package choice
-	name:			casting cost mana symbols
-	description:	Symbols used in the casting cost.
-	match:			magic-mana-*.mse-symbol-font
-	initial:		magic-mana-large.mse-symbol-font
-styling field:
-	type:			package choice
-	name:			text box mana symbols
-	description:	Symbols used in the rule text and flavor text.
-	match:			magic-mana-*.mse-symbol-font
-	initial:		magic-mana-small.mse-symbol-font
-styling field:
-	type:			text
-	name:			name font
-	description:	Font used for the name, alias, type, pt, and transformation reminder. Hover your mouse over the font file to see it's details, and write it's Title here.
-styling field:
-	type:			text
-	name:			text font
-	description:	Font used for the rule text. Hover your mouse over the font file to see it's details, and write it's Title here.
-styling field:
-	type:			text
-	name:			text italic font
-	description:	Font used for the flavor text and reminder texts. Hover your mouse over the font file to see it's details, and write it's Title here.
-styling style:
-	use guild mana symbols:
-		choice images:
-			yes:				/magic-mana-small.mse-symbol-font/mana_guild_rg.png
-			no:					/magic-mana-small.mse-symbol-font/mana_rg.png
-	tap symbol:
-		render style:	both
-		choice images:
-			modern:				/magic-mana-large.mse-symbol-font/mana_t.png
-			old:				/magic-mana-large.mse-symbol-font/mana_t_old.png
-			diagonal T:			/magic-mana-large.mse-symbol-font/mana_t_older.png
-	center rule text:
-		render style:	both
-		choice images:
-			always:				/magic.mse-game/icons/center-all-text.png
-			short text only:	/magic.mse-game/icons/center-short-text.png
-			never:				/magic.mse-game/icons/center-no-text.png
-	inverted common symbol:
-		choice images:
-			no:					{ symbol_variation(symbol: set.symbol, variation: "common") }
-			yes:				{ symbol_variation(symbol: set.symbol, variation: "invertedcommon") }
 
+include file: /magic-modules.mse-include/information/styling_fields
+
+include file: /magic-modules.mse-include/symbol-fonts/styling_fields
+
+include file: /magic-modules.mse-include/fonts/styling_fields
 
 ############################################################## Card fields
-include file: /magic-modules.mse-include/corners/card_fields
+
 include file: /magic-modules.mse-include/information/card_fields
-include file: /magic-modules.mse-include/separators/card_fields
+
 include file: /magic-modules.mse-include/stamps/card_fields
+
+include file: /magic-modules.mse-include/corners/card_fields
+
+include file: /magic-modules.mse-include/watermarks/card_fields
+
+include file: /magic-modules.mse-include/separators/card_fields
+
+include file: /magic-modules.mse-include/namelines/card_fields
+
+# include file: /magic-modules.mse-include/typelines/card_fields
+# left out on purpose because I don't want to fuss with trying to match the existing coordinates all over again
+# what's already here works fine tbh
+
+include file: /magic-modules.mse-include/foils/card_fields
+
+include file: /magic-modules.mse-include/alias/card_fields
 
 card style:
 	############################# Background stuff
@@ -428,7 +372,7 @@ card style:
 		top :				0
 		width:				375
 		height:				523
-		z index:			100
+		z index:			110
 		visible:			{ styling.border != "no" }
 		mask:				{ if styling.border == "yes" then "mask_background_border.png" else "mask_background_borderless_border.png" }
 	card color:
@@ -449,25 +393,29 @@ card style:
 		z index:			900
 		alignment:			middle left shrink-overflow
 		font:
-			name:				Beleren Bold
-			size:				{ 16 - shrink_name() }
-			color:				black
+			name:				{ name_font() }
+			italic name:		{ name_font_italic() }
+			size:				{ name_font_size() }
+			scale down to:		7
+			color:				{ name_font_color() }
 	casting cost:
 		right:				346
-		top:				28
+		top:				27
 		width:				{ max(35, card_style.casting_cost.content_width + 6) }
-		height:				26
+		height:				27
 		z index:			920
 		alignment:			middle right
 		always symbol:		true
 		font:
 			name:				MPlantin
+			italic name:		{ name_font_italic() }
 			size:				15
-			color:				black
+			scale down to:		7
+			color:				{ name_font_color() }
 		symbol font:
 			name:				{ styling.casting_cost_mana_symbols }
 			size:				15
-			#alignment:			middle right
+			scale down to:		7
 	alias:
 		left:				54
 		top:				58
@@ -476,9 +424,11 @@ card style:
 		z index:			900
 		alignment:			middle center shrink-overflow
 		font:
-			name:				MPlantin-Italic
-			size:				9
-			color:				white
+			name:				{ name2_font() }
+			italic name:		{ name2_font_italic() }
+			size:				{ name2_font_size() }
+			scale down to:		5
+			color:				{ name2_font_color() }
 			weight:				bold
 	############################# Image
 	image:
@@ -511,9 +461,11 @@ card style:
 		z index:			1000
 		alignment:			middle left shrink-overflow
 		font:
-			name:				Beleren Bold
-			size:				{ 13 - shrink_type() }
-			color:				black
+			name:				{ type_font() }
+			italic name:		{ type_font_italic() }
+			size:				{ type_font_size() }
+			scale down to:		7
+			color:				{ type_font_color() }
 			separator color:	red
 	rarity:
 		right:				{ rarity_right() }
@@ -538,34 +490,23 @@ card style:
 		line height line max:	1.6
 		alignment:
 			script:
-				if (styling.center_rule_text == "short text only" and
+				if (styling.center_text == "short text only" and
 				   not contains(match:"\n", card.rule_text) and
 				   card.flavor_text == "<i-flavor></i-flavor>" and
 				   card_style.text.content_lines <= 2) or
-				   styling.center_rule_text == "always"
+				   styling.center_text == "always"
 				then "middle center"
 				else "middle left"
 		font:
-			name:				MPlantin
-			italic name:		MPlantin-Italic
-			size:				{ if styling.rule_text_font_size_cap != "" then to_number(styling.rule_text_font_size_cap) else 13 }
+			name:				{ body_font() }
+			italic name:		{ body_font_italic() }
+			size:				{ body_font_size() }
 			scale down to:		7
-			color:				{ styling.text_color }
+			color:				{ body_font_color() }
 		symbol font:
 			name:				{ styling.text_box_mana_symbols }
-			size:				{ if styling.rule_text_font_size_cap != "" then to_number(styling.rule_text_font_size_cap) else 13 }
+			size:				{ body_font_size() }
 			scale down to:		7
-	watermark:
-		left:				10
-		top:				{ 315 + chop_top() }
-		right:				355
-		bottom:				437
-		z index:			600
-		render style:		image
-		popup style:		in place
-		alignment:			middle center
-		include file:		/magic.mse-game/watermarks/menu_choice_images
-		image:				{ watermark_image_1() }
 	############################# PT
 	pt:
 		left:				299
@@ -575,9 +516,11 @@ card style:
 		z index:			1000
 		alignment:			center middle shrink-overflow
 		font:
-			name:				Beleren Bold
-			size:				16
-			color:				black
+			name:				{ pt_font() }
+			italic name:		{ pt_font_italic() }
+			size:				{ pt_font_size() }
+			scale down to:		7
+			color:				{ pt_font_color() }
 			separator color:	red
 
 ############################################################## Extra card fields
@@ -801,7 +744,7 @@ extra card style:
 		top:				0
 		width:				{ textbox_width() }
 		height:				{ textbox_height() }
-		z index:			50
+		z index:			105
 		render style:		image
 		image:				{ textbox_image() }
 		mask:				{ textbox_mask() }

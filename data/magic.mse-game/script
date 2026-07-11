@@ -33,7 +33,7 @@ include file: language
 include file: statistics_script
 include file: /magic-blends.mse-include/new-blends
 ############################################################## Versioning
-version_date := {"2024-10-01 Template Pack 3.0.5: Magic Modules & Showcase Catchup - DFC & Exporter Fixes"}
+version_date := {"2025-02-01 Template Pack 3.1.0: Mainframe Battles"}
 version := version_date
 ############################################################## Common filters
 ############################################################## Utility
@@ -42,6 +42,8 @@ semicolon_count := filter_text@(match:";")
 
 split_comma :=     split_text@(match: " *, *")
 split_semicolon := split_text@(match: " *; *")
+split_line :=      split_text@(match: "\n")
+split_face :=      split_text@(match: " ?// ?")
 line_count :=      split_text@(match:"\n+",include_empty:false) + length
 px_split :=        split_text@(match:"p?x",include_empty:false)
 
@@ -51,6 +53,7 @@ has_png :=         contains@(match:".png")
 has_none :=        contains@(match: "none")
 
 starts_vowel :=    match@(match:"[aâäàáeêëèéiîïìíoôöòóuûüùúAÂÄÀÁEÊËÈÉIÎÏÌÍOÔÖÒÓUÛÜÙÚ]")
+ends_dash :=       match@(match: "/$")
 
 remove_comma :=    replace@(match: ",", replace: "")
 long_dash :=       replace@(match:"-", replace:"—")
@@ -96,9 +99,14 @@ clamp := {
 	else if number > maximum then maximum
 	else number
 }
-round_up :=   {to_int(0.99999999999998+input)} #### 0.99999999999999 == 1, leave the 8
-round_near := {to_int(0.5+input)}
 to_number_lax := { to_number(input) or else to_number(trim(input)) or else 0 }
+round_near := { if input < 0 then to_int(input-0.5) else to_int(input+0.5) }
+#### 0.99999999999999 == 1, leave the 8
+round_up := {
+	if input < 0
+		then to_int(input-0.99999999999998)
+	else to_int(input+0.99999999999998)
+}
 
 #### type_name("string") returns string ("string") so fix that
 #### type_name(nil) is fine
@@ -144,6 +152,81 @@ crop_safe :=
 	then ""
 	else crop(input, offset_x: offset_x, offset_y: offset_y, width: width, height: height)
 }
+#### Crop out the middle section of an image
+internal_crop := {
+	# given img, image to crop
+	# given height, height of input
+	# given width, width of input
+	# given left/top, minimum left/top edge coordinate
+	# given right/bottom, maximum right/bottom edge coordinate
+	# option distance, adds to left/top edge
+	# option distance2, adds to right/bottom edge
+	
+	# crop 0 - left+length
+	# crop right-length_r - maximum
+	# use insert image to combine them
+	
+	# handle missing edge
+	cut_horiz := left != nil and right != nil
+	cut_verti := top != nil and bottom != nil
+	if not cut_horiz and not cut_verti then (
+		if left != nil then (
+			right := width
+			cut_horiz := true
+		)
+		else if right != nil then (
+			left := 0
+			cut_horiz := true
+		)
+		else if top != nil then (
+			bottom := height
+			cut_verti := true
+		)
+		else if bottom != nil then (
+			top := 0
+			cut_verti := true
+		)
+	)
+	# rollover large distance
+	internal_space := if cut_horiz then right - left else if cut_verti then bottom - top else 0
+	excess_crop := 0
+	if distance > internal_space then (
+		diff := distance - internal_space
+		distance := internal_space
+		distance2 := distance2 + diff
+	)
+	if distance2 > internal_space then (
+		excess_crop := distance2 - internal_space
+		distance2 := internal_space
+		if distance < internal_space then (
+			diff := internal_space - distance
+			if diff < excess_crop then distance := distance + excess_crop
+			else (
+				distance := internal_space
+				excess_crop := excess_crop - diff
+			)
+		)
+	)
+	# maybe we insert excess_crop with more crops but idk if that's necessary
+	
+	if cut_horiz then (
+		img_left := crop_safe(img, offset_x:0, offset_y:0, width:left+distance, height:height, max_x:width, max_y:height)
+		r_offset := right - distance2
+		r_width := width - r_offset
+		img_right := crop_safe(img, offset_x:r_offset, offset_y:0, width:r_width, height:height, max_x:width, max_y:height)
+		
+		insert_image(base_image: img_left, inserted_image:img_right, offset_x:left+distance, offset_y:0)
+	)
+	else if cut_verti then (
+		img_top := crop_safe(img, offset_x:0, offset_y:0, width:width, height:top+distance, max_x:width, max_y:height)
+		b_offset := bottom - distance2
+		b_height := height - b_offset
+		img_bot := crop_safe(img, offset_x:0, offset_y:b_offset, width:width, height:b_height, max_x:width, max_y:height)
+		
+		insert_image(base_image: img_top, inserted_image:img_bot, offset_x:0, offset_y:top+distance)
+	)
+	else img
+}@(distance:0, distance2:0, left:nil, right:nil, top:nil, bottom:nil)
 #### pad a string from the front or back or both idk i'm not your dad
 fill_len := {
 	output := to_string(input)
@@ -369,15 +452,16 @@ has_identity_general := {
 		color_field 	:= card["card_color"+tag]
 		cost_field 		:= card["casting_cost"+tag]
 		culled_color	:= cull_directions(cull_noncolors(color_field))
+		default_land	:= lang_setting("is_land")(card["super_type"]+tag)
 
 		default_from_casting_cost := colors_from_mana_symbols(cost_field)
 		default_from_card_color := if chosen(color_field, choice:"colorless")
-				then ""							## colorless
+				then ""												## colorless
 			else if default_from_casting_cost == "" and chosen(color_field, choice:"land")
-				then ""							## land
+				then (if default_land then "" else culled_color)	## land
 			else if chosen(color_field, choice:"multicolor") and culled_color == ""
-				then default_from_casting_cost	## 3+ multicolor
-			else culled_color					## normal color
+				then default_from_casting_cost						## 3+ multicolor
+			else culled_color										## normal color
 		
 		color_cost_disagree := default_from_card_color != default_from_casting_cost
 		color_indicator_disagree := default_from_card_color != culled_indicator and indicator_field != color_field
@@ -422,13 +506,13 @@ crop_multi_image := {
 
 ############################################################## Sorting mana symbols
 #### correctly sort a mana symbol (no guild mana)
-mana_sort := sort_text@(order: "\\?XYZI[0123456789]VLHSFCAIE(WUBRG)") 
+mana_sort := sort_text@(order: "\\?XYZI[0123456789]VHSFCAI(EKPLO)(WUBRG)") 
 #### correctly sort wedge mana
-mana_sort_wedge := sort_text@(order: "\\?XYZI[0123456789]VLHSFCAIE(WBGUR)")
+mana_sort_wedge := sort_text@(order: "\\?XYZI[0123456789]VHSFCAI(EPOKL)(WBGUR)")
 #### sort nothing
-mana_unsort := sort_text@(order:"[/\\?XYZI0123456789VLHSCAIEWUBRG]")
+mana_unsort := sort_text@(order:"[/\\?XYZI0123456789VHSCAIEKPLOMWUBRG]")
 #### correctly sort guild mana
-mana_sort_guild := sort_text@(order: "[\\?XYZI01234567890VLHSFCAIEWUBRG/|]") +
+mana_sort_guild := sort_text@(order: "[\\?XYZI01234567890VHSFCAIEKPLOWUBRG/|]") +
 		replace@(
 			#### No lookbehind :(
 			#match: "(?<!/)(./.|././.|./././.|.[|])(?!/)",
@@ -480,6 +564,10 @@ mana_t :=
 	else if field == "old" then "old"
 	else "new"
 }
+mana_s := { "new" }
+small_mana_t := "mana_t.png"
+symbol_font_color := { rgb(0,0,0) }
+symbol_font_alpha := { 1.0 }
 guild_mana :=
 {
 	styling.use_guild_mana_symbols or else false
@@ -504,6 +592,16 @@ colorless_color := {
 	else if cc == "green" then "g"
 	else "c"
 }
+
+convert_scryfall_phy_hybrid_mana := replace@(match:"\{(.)/(.)/P\}", replace:"\{H/\\1/\\2\}")
+convert_scryfall_phy_normal_mana := replace@(match:"\{(.)/P\}", replace:"\{H/\\1\}")
+convert_scryfall_pawprint_symbol := replace@(match:"\{P\}", replace:"\{J\}")
+convert_scryfall_chaos_symbol := replace@(match:"\{CHAOS\}", replace:"\{A\}")
+convert_scryfall_braces := replace@(match:"\{([A-Z0-9/]+)\}", replace:"<sym>\\1</sym>") + replace@(match:"</sym><sym>", replace:"")
+convert_scryfall_mana :=	convert_scryfall_phy_hybrid_mana +
+							convert_scryfall_phy_normal_mana +
+							convert_scryfall_pawprint_symbol +
+							convert_scryfall_chaos_symbol
 
 ############################################################## Mainframe mana
 use_v_mana := {contains(set.custom_mana_symbol_name, match:".png")}
@@ -938,7 +1036,7 @@ is_half_mana :=    match@(match: "1/2|[|][WUBRGS]")
 is_half_generic := match@(match: "1/2")
 is_colored_mana := match@(match: "[WUBRG]")
 only_numbers :=    filter_text@(match: "^[0123456789]+")
-cmc_split :=       break_text@(match: "(?ix) 1/2 | [|][WUBRGC] | TK | [0-9](/[WUBRGCVLHSCETQ2]) | [0-9]+(?!/[WUBRGCVLHSCETQ2]) | [WUBRGCVLHS0-9](/[WUBRGCVLHS])\{0,4} ")
+cmc_split :=       break_text@(match: "(?ix) 1/2 | [|][WUBRGC] | TK | [0-9](/[WUBRGCVHSCEKPLOTQ2]) | [0-9]+(?!/[WUBRGCVHSCEKPLOTQ2]) | [WUBRGCVHS0-9](/[WUBRGCVHS])\{0,4} ")
 cmc := {to_number(
 	for each sym in cmc_split(to_text()) do (
 		numbers := only_numbers(sym)
@@ -1114,21 +1212,24 @@ digital_map := [
 for_mana_costs := {
 	if input.separator_before == "—" and contains(input.param, match: " ") then (											#### multi word
 		if comma_count(input.param) == "," then (																			#### two part
-			if match(match: "^[VLHSCAIETKQ\\?XYZIWUBRG0-9/|]+,", input.param) then													#### starts with mana
+			if match(match: "^[VHSCAIETKPLOQ\\?XYZIWUBRG0-9/|]+,", input.param) then													#### starts with mana
 				"{add}<param-cost>{alternative_cost(input.param, trim:combined_cost, s:action)}</param-cost>"					#### "add" mana 
 			else "<param-cost>{alternative_cost(input.param, trim:combined_cost, s:action)}</param-cost>{non}"					#### else cost "non"
 		) else if contains(input.param, match: ",") then (																	#### three+ parts
-			if match(match: "^[VLHSCAIETKQ\\?XYZIWUBRG0-9/|]+,", input.param) then													#### starts with mana
+			if match(match: "^[VHSCAIETKPLOQ\\?XYZIWUBRG0-9/|]+,", input.param) then													#### starts with mana
 				"{add}<param-cost>{alternative_cost(input.param, trim:long_cost, s:action)}</param-cost>"						#### "add" mana with long formatting
 			else "<param-cost>{alternative_cost(input.param, trim:long_nomana_cost, s:action)}</param-cost>{non}"				#### else cost "non" with long formatting
 		) else
 			"<param-cost>{alternative_cost(input.param, s:action, trim:lower_first)}{non}</param-cost>"						#### one, nonmana, part
-	) else if match(match: "^[VLHSCAIETKQ\\?XYZIWUBRG0-9/|]+$", input.param) then											#### one word
+	) else if is_mana_cost(input) then																						#### one word
 		"{add}<param-mana>{input.param}</param-mana>"																		#### mana
 	else
 		"<param-cost>{alternative_cost(input.param, trim:combined_cost, s:action)}</param-cost>{non}"						#### nonmana
 }@(non:" in addition to any other costs", action:false, add:"")
-
+#### return bool; is the input is a simple mana cost?
+is_mana_cost := {
+	match(match: "^[VHSCAIETKPLOQ\\?XYZIWUBRG0-9/|]+$", input.param)
+}
 #### Convert extra costs
 long_cost := replace@(match:", [A-Z]", replace: { to_lower() } )
 long_nomana_cost := replace@(match:"[A-Z]", replace: { to_lower() })
@@ -1136,7 +1237,7 @@ long_nomana_cost := replace@(match:"[A-Z]", replace: { to_lower() })
 lower_first := replace@(match:"^[A-Z]", replace: { to_lower() })
 combined_cost := replace@(match:", [A-Z]", replace: { to_lower() })+
 	replace@(match:",", replace:" and")+
-	replace@(match:"^[VLHSCETKQ\\?XYZIWUBRG0-9/|]+", in_context: "(^|[[:space:]])<match>(?![a-z])", replace: "<sym-auto>&</sym-auto>")+
+	replace@(match:"^[VHSCETKPLOQ\\?XYZIWUBRG0-9/|]+", in_context: "(^|[[:space:]])<match>(?![a-z])", replace: "<sym-auto>&</sym-auto>")+
 	replace@(match:"^[A-Z]", replace: { to_lower() })
 alternative_cost := {
 	input := trim(input)
@@ -1148,6 +1249,7 @@ actionize := replace@(match:"(activate|ante|cast|choose|create|destroy|discard|d
 	+replace@(match:"(attach)", replace:"\\1es")
 	+replace@(match:"scry", replace:"scries")
 	+replace@(match:"your", replace:"their")
+	+replace@(match:"you", replace:"they")
 
 #### determine if a reminder text should refer to this card or that card
 this_or_that := {
@@ -1233,6 +1335,25 @@ phy_reminder := {
 	else
 		reminder_text := ""
 	reminder_text
+}
+#### What number does the station/planet become a creature?
+station_number := {
+	tag := if card.pt != ""
+			then ""
+		else if card.pt_2 != ""
+			then "_1"
+		else if card.pt_3 != ""
+			then "_2"
+		else if card.pt_4 != ""
+			then "_2"
+		else ""
+	sn := 0
+	if tag != "" then (
+		level_circle := card["level"+tag]
+		sn := replace(level_circle, match:"[-+][0-9]*", replace:"");
+		if sn == 0 then sn := 0
+	)
+	sn
 }
 #### includes localization ability
 craft_code := {
@@ -1388,8 +1509,8 @@ mana_context :=
 			|	<match>[ ]can[ ]be[ ]paid
 			|	(pays?|additional|costs?|the|adds?|pay(ed)?[ ](with|using)) #### pay X. creatures cost 1 less. pay an additional G.
 				([ ]either)?                                                                            #### pay either X or Y
-				([ ](<sym[^>]*>)?[-+=]?[VLHSCETKQ\\?XYZIEWUBRG0-9/|]+(</sym[^>]*>)?,)*                  #### pay X, Y or Z
-				([ ](<sym[^>]*>)?[-+=]?[VLHSCETKQ\\?XYZIEWUBRG0-9/|]+(</sym[^>]*>)?[ ](and|or|and/or))* #### pay X or Y
+				([ ](<sym[^>]*>)?[-+=]?[VHSCETKPLOQ\\?XYZIEWUBRG0-9/|]+(</sym[^>]*>)?,)*                  #### pay X, Y or Z
+				([ ](<sym[^>]*>)?[-+=]?[VHSCETKPLOQ\\?XYZIEWUBRG0-9/|]+(</sym[^>]*>)?[ ](and|or|and/or))* #### pay X or Y
 				[ ]<match>
 				(
 						[,.)\"”]|$                              #### (end of word)
@@ -1416,18 +1537,18 @@ auto_reminder := {
 	level := filter_text(input, match:"[0-9]+")
 	if level == "" then level := "1"
 	tag := name_tag_for_level(to_number(level))
-	type_field := card["type"+tag]
+	type_field := remove_tags(card["type"+tag])
 	cost_field := card["casting_cost"+tag]
 	if custom_auto_reminder()
-		then custom_auto_reminder()
+		then custom_auto_reminder(input)
 	else if lang_setting("is_saga")(type_field)
 		then saga_reminder_script(tag:tag)
 	else if lang_setting("is_class")(type_field)
 		then "<i-auto>(Gain the next level as a sorcery to add its ability.)</i-auto>"
-	else if contains(cost_field, match:"/")
-		then hybrid_reminder(cost_field)
 	else if lang_setting("is_room")(type_field)
 		then "<i-auto>(You may cast either half. That door unlocks on the battlefield. As a sorcery, you may pay the mana cost of a locked door to unlock it.)</i-auto>"
+	else if contains(cost_field, match:"/")
+		then hybrid_reminder(cost_field)
 	else ""
 }
 saga_map := [
@@ -1470,21 +1591,26 @@ hybrid_reminder := {
 		input,
 		match:"(([^ ])/([^ ])(?:/([^ ]))?).*", ## _1 hybrid, _2 sym1, _3 sym2, _4 sym3
 		replace: {
-			if _4 != "" then (
-				if _2 == "2" then
-					"<i-auto>(<sym-auto>{_1}</sym-auto> can be paid with any two mana, <sym-auto>{_3}</sym-auto>, or <sym-auto>{_4}</sym-auto>. This card's mana value is {english_number(cmc(input))}.)</i-auto>"
-				else if _2 == "H" then
-					"<i-auto>(<sym-auto>{_1}</sym-auto> can be paid with <sym-auto>{_3}</sym-auto>, <sym-auto>{_4}</sym-auto>, or 2 life.)</i-auto>"
-				else "<i-auto>(<sym-auto>{_1}</sym-auto> can be paid with either <sym-auto>{_2}</sym-auto>, <sym-auto>{3}</sym-auto>, or <sym-auto>{3}</sym-auto>.)</i-auto>"
-			)
-			else (
-				if _2 == "2" then
-					"<i-auto>(<sym-auto>{_1}</sym-auto> can be paid with any two mana or with <sym-auto>{_3}</sym-auto>. This card's mana value is {english_number(cmc(input))}.)</i-auto>"
-				else if _2 == "H" then
-					"<i-auto>(<sym-auto>{_1}</sym-auto> can be paid with either <sym-auto>{_3}</sym-auto> or 2 life.)</i-auto>"
-				else "<i-auto>(<sym-auto>{_1}</sym-auto> can be paid with either <sym-auto>{_2}</sym-auto> or <sym-auto>{_3}</sym-auto>.)</i-auto>"
-			)
+			hybrid_reminder_delooper(symbol:_1, hyb1:_2, hyb2:_3, hyb3:_4)
 		}
+	)
+}
+## split into its own function to avoid replace() loops with autoreminder
+## hybrid_reminder_delooper(symbol:"H/R/W", hyb1:"H", hyb2:"R", hyb3:"W")
+hybrid_reminder_delooper := {
+	if hyb3 != "" then (
+		if hyb1 == "2" then
+			"<i-auto>(<sym-auto>{symbol}</sym-auto> can be paid with any two mana, <sym-auto>{hyb2}</sym-auto>, or <sym-auto>{hyb3}</sym-auto>. This card's mana value is {english_number(cmc(input))}.)</i-auto>"
+		else if hyb1 == "H" then
+			"<i-auto>(<sym-auto>{symbol}</sym-auto> can be paid with <sym-auto>{hyb2}</sym-auto>, <sym-auto>{hyb3}</sym-auto>, or 2 life.)</i-auto>"
+		else "<i-auto>(<sym-auto>{symbol}</sym-auto> can be paid with either <sym-auto>{hyb1}</sym-auto>, <sym-auto>{3}</sym-auto>, or <sym-auto>{3}</sym-auto>.)</i-auto>"
+	)
+	else (
+		if hyb1 == "2" then
+			"<i-auto>(<sym-auto>{symbol}</sym-auto> can be paid with any two mana or with <sym-auto>{hyb2}</sym-auto>. This card's mana value is {english_number(cmc(input))}.)</i-auto>"
+		else if hyb1 == "H" then
+			"<i-auto>(<sym-auto>{symbol}</sym-auto> can be paid with either <sym-auto>{hyb2}</sym-auto> or 2 life.)</i-auto>"
+		else "<i-auto>(<sym-auto>{symbol}</sym-auto> can be paid with either <sym-auto>{hyb1}</sym-auto> or <sym-auto>{hyb2}</sym-auto>.)</i-auto>"
 	)
 }
 #### these are considered a correct 'word' for spellchecking in the text box:
@@ -1508,7 +1634,7 @@ auto_correct :=
 			 + "([A-Z])"                   #### match this
 		replace: { _1 + _2 + to_lower(_3)})
 	+replace@(
-		match: "([ ]*: |—| — )"            #### preceded by this
+		match: "([^ ]: |—| — )"            #### preceded by this
 		     + "([[:lower:]])"             #### match this
 		     + "(?![)])",                  #### not followed by this
 		replace: { _1 + to_upper(_2) })
@@ -1728,18 +1854,6 @@ text_filter :=
 		tag: "<atom-legname>",
 		contents: { "<nospellcheck>" + (if card_name=="" then "LEGENDNAME" else legend_filter(strip_card_codes(card_name, atom:true))) + "</nospellcheck>" }
 	) +
-	tag_contents@(
-		tag: "<atom-autorem>"
-		contents: { auto_reminder(margin_code) }
-	) +
-	replace@(
-		match:"(E+)(</sym(-auto)?>)? <atom-autorem></atom-autorem>",
-		replace: {
-			num := english_number(length(_1))
-			str := if num == "one" then "an energy counter" else num + " energy counters"
-			_1 + _2 + " <atom-autorem><i-auto>({str})</i-auto></atom-autorem>"
-		}
-	) +
 	replace@(
 		match: "INS([1-9])",
 		in_context: "(^|[[:space:]]|\\(|,|\\.|:|“|\"|'|‘|/|​)<match>",
@@ -1756,7 +1870,7 @@ text_filter :=
 	} +
 	#### step 4 : explict non mana symbols
 	replace@(
-		match: "\\][-+=]?[VLHSCETQ\\?XYZIWUBRG0-9/|]+\\[",
+		match: "\\][-+=]?[VHSCEKPLOTQINF\\?XYZIWUBRG0-9/|]+\\[",
 		replace: {"<nosym>" + mana_filter_t() + "</nosym>"}
 	) +
 	#### step 5 : add mana & tap symbols
@@ -1771,22 +1885,52 @@ text_filter :=
 		replace: {"<sym-auto>" + _1 + "</sym-auto>" + _3}
 	) +
 	replace@(
-		match: "\\b[VLHSCETQ\\?XYZIWUBRG0-9/|]+\\b",
+		match: "\\b[VHSCEKPLOTQ\\?XYZIWUBRG0-9/|]+\\b",
 		in_context: mana_context,
 		replace: {"<sym-auto>" + mana_filter_t() + "</sym-auto>"}
 	) +
 	#### step 5b : remove false positive mana & tap symbols
 	replace@(
-		match: "<sym-auto>([VLHSCETQ\\?XYZIWUBRG0-9/|]+)</sym-auto>",
+		match: "<sym-auto>([VHSCEKPLOTQ\\?XYZIWUBRG0-9/|]+)</sym-auto>",
 		in_context: mana_un_context,
 		replace: "\\1"
 	) +
 	#### step 5c : add explicit mana symbols
 	replace@(
-		match: "\\[[-+=]?[VLHSCETQE\\?XYZIWUBRG0-9/|]+\\]",
+		match: "\\[INF\\]",
+		replace: {"<sym>INF</sym>" }
+	) +
+	replace@(
+		match: "\\[[-+=]?[VHSCEKPLOTQ\\?XYZIWUBRG0-9/|]+\\]",
 		replace: {"<sym>" + mana_filter_t() + "</sym>"}
 	) +
-	#### step 6 : curly quotes
+	#### step 6a : auto reminder
+	#### default to subtype or mana cost rt
+	tag_contents@(
+		tag: "<atom-autorem>"
+		contents: { auto_reminder(margin_code) }
+	) +
+	#### overrule if immediately after a string of energy symbols
+	replace@(
+		match:"(E+)(</sym(-auto)?>)? <atom-autorem>[^\n]*?</atom-autorem>",
+		replace: {
+			num := english_number(length(_1))
+			str := if num == "one" then "an energy counter" else num + " energy counters"
+			_1 + _2 + " <atom-autorem><i-auto>({str})</i-auto></atom-autorem>"
+		}
+	) +
+	#### overrule if at the end of a paragraph with a hybrid mana symbol
+	replace@(
+		match:"(<sym(?:-auto)?>)([^</]*(([^ ])/([^ ])(?:/?([^ ])?))[^<]*)(</sym(?:-auto)?>[^\n]+) <atom-autorem>([^\n]*?)</atom-autorem>$",
+		replace: {
+			# _1 <sym, _2 mana string, _3 symbol, _4 hyb1, _5 hyb2, _6 hyb3, _7 </sym> remaining string, _8 eaten autorem
+			# eaten autorem may have legitimate strings, R/W: You get EE **. ** -> R/W: You get EE (R/W can be paid with either R or W.)
+			# <atom-autorem>(two energy counters)</atom-autorem>. <atom-autorem></atom-autorem>
+			extra := if contains(_8, match:"atom-autorem") then "<atom-autorem>" + substring(_8, end:length(_8)-length("<atom-autorem>")) else ""
+			_1 + _2 + _7 + extra + " <atom-autorem>{hybrid_reminder_delooper(symbol:_3, hyb1:_4, hyb2:_5, hyb3:_6)}</atom-autorem>"
+		}
+	) +
+	#### step 6b : curly quotes
 	{
 		if set.curly_quotes then curly_quotes(input) else input
 	} +
@@ -1809,7 +1953,7 @@ text_filter :=
 	} +
 	#### step 8 : automatic capitalization, but not after "("
 	#replace@(
-	#	match: "([ ]*: |—| — )" #### preceded by this
+	#	match: "([^ ]: |—| — )" #### preceded by this
 	#	     + "([[:lower:]])"  #### match this
 	#	     + "(?![)])",       #### not followed by this
 	#	replace: { _1 + to_upper(_2) }) +
@@ -1856,11 +2000,10 @@ flavor_text_filter :=
 card_face := {
 	front := card[input]
 	back := if card[input+"_2"] or else "" != "" then card[input+"_2"] else card[input]
-	if match(margin_code, match:"(text[2456]|lv[5678])") then back else front
+	if match(margin_code, match:"(text[2456]|lv9|lv1[0-6])") then back else front
 }
 face_code := {
-	face := ""
-	if margin_code == "text2" or margin_code == "lv5" or margin_code == "lv6" or margin_code == "lv7" or margin_code == "lv8" then face := "_2"
+	face := if match_text(margin_code, match:"(text[2456]|lv9|lv1[0-6])") then "_2" else ""
 	output := face_scripts[input](face) or else if_parse(input, face:face) or else input
 	output
 }
@@ -1880,15 +2023,29 @@ face_scripts := [
 		contains(card[field+face], match:query)
 	},
 	notcontains: {not contains(card[field+face], match:query)},
+	flipthis: {
+		# always send back That/that
+		# send back This/this if (it|he|she|they|CARDNAME) keywords
+		# else flip to That/that
+		if t == f
+			then false
+		else if match_text(card[field+face], match:"(\\bit|\\b[Hh]e|\\b[Ss]he|\\b[Tt]hey|<atom-(card|print)name>.*?</atom-(card|print)name>) <kw[^>]+><nospellcheck><key>"+query)
+			then false
+		else true
+	},
 	name: {card["name"+face]},
 	cost: {card["casting_cost"+face]},
 	altname: {card["name"+flip_face(face)]},
 	altcost: {card["casting_cost"+flip_face(face)]},
+	isfront: {face == ""},
+	isback: { face == "_2"}
 ]
+
 expand_facecodes := [
 	subtype: "sub_type",
 	castingcost: "casting_cost",
-	manacost: "casting_cost"
+	manacost: "casting_cost",
+	ruletext: "rule_text"
 ]
 if_parse := replace@(
 	match: "if_(.*)_then_(.*)_else_(.*)",
@@ -1905,7 +2062,7 @@ if_scripts := {
 		query := contCheck[2]
 	)
 	field := expand_facecodes[field] or else field
-	if face_scripts[func](face, field:field, query:query) or else false then t else f
+	if face_scripts[func](face, field:field, query:query, t:t, f:f) or else false then t else f
 }
 ############################################################## Level Margins
 #### these will be determined by the style affecting the margins and otherwise be 0
@@ -1970,8 +2127,8 @@ apply_margins := {
 }
 
 bump_text := {
-	blocks := split_text(input, match:"\n");
-	new_text := blocks[0];
+	blocks := split_line(input)
+	new_text := blocks[0]
 	for x from 1 to length(blocks)-1 do new_text := new_text + "\n" + bumper(blocks[x])
 	new_text
 }
@@ -2324,7 +2481,7 @@ lines_of_text := {												#### estimate lines in break blocks
 			lines := lines + calc_lines(word_split(input[x]), char:char)
 	lines
 }
-flavor_text := {split_text(match:"\n", remove_tags(card.flavor_text+"\n"))}						#### remove tags, add \n so .1 doesn't explode
+flavor_text := {split_line(remove_tags(card.flavor_text+"\n"))}						#### remove tags, add \n so .1 doesn't explode
 hard_flavor_break := { if not contains(card.flavor_text, match:"\n") then 0 else if contains(card.flavor_text, match:"<soft-line>\n") then 0 else if lines_of_rules() >= 3 then -3 else -2}
 font_size := {min(14,round_near(card_style.text.content_height / card_style.text.content_lines) - 8)}	#### approximate font size
 adj_char_width := {7.35 * min(14, font_size()+0.95) / 14}										#### average char width, adjusted for font size
@@ -2340,7 +2497,7 @@ uneven_correction := { if lines_of_flavor() == 1 then max(4, (card_style.text.co
 #### old_bar_equation is compatibilty for 2.0.0
 old_bar_equation := { top_of_textbox() + padding_height() + card_style.text.content_height - line_height()*(lines_of_flavor() + offset_lines()) + linebreak_height() - uneven_correction() + front_corr() + bar_offset() + hard_flavor_break() +1 }
 	
-flavor_text2 := {split_text(match:"\n", remove_tags(card.flavor_text_2+"\n"))}						#### remove tags, add \n so .1 doesn't explode
+flavor_text2 := {split_line(remove_tags(card.flavor_text_2+"\n"))}						#### remove tags, add \n so .1 doesn't explode
 hard_flavor_break2 := { if not contains(card.flavor_text_2, match:"\n") then 0 else if contains(card.flavor_text_2, match:"<soft-line>\n") then 0 else if lines_of_rules2() >= 3 then -3 else -2}
 font_size2 := {min(14,round_near(card_style.text_2.content_height / card_style.text_2.content_lines) - 8)}	#### approximate font size
 adj_char_width2 := {7.35 * min(14, font_size2()+0.95) / 14}										#### average char width, adjusted for font size
@@ -2355,7 +2512,7 @@ uneven_correction2 := { if lines_of_flavor2() == 1 then max(4, (card_style.text_
 #### add it all up
 old_bar_equation2 := { top_of_textbox2() + padding_height2() + card_style.text_2.content_height - line_height2()*(lines_of_flavor2() + offset_lines2()) + linebreak_height2() - uneven_correction2() + back_corr() + bar_offset2() + hard_flavor_break2() +1 }
 
-flavor_text3 := {split_text(match:"\n", remove_tags(card.flavor_text_3+"\n"))}						#### remove tags, add \n so .1 doesn't explode
+flavor_text3 := {split_line(remove_tags(card.flavor_text_3+"\n"))}						#### remove tags, add \n so .1 doesn't explode
 hard_flavor_break3 := { if not contains(card.flavor_text_3, match:"\n") then 0 else if contains(card.flavor_text_3, match:"<soft-line>\n") then 0 else if lines_of_rules3() >= 3 then -3 else -2}
 font_size3 := {min(14,round_near(card_style.text_3.content_height / card_style.text_3.content_lines) - 8)}	#### approximate font size
 adj_char_width3 := {7.35 * min(14, font_size3()+0.95) / 14}										#### average char width, adjusted for font size
@@ -2689,6 +2846,10 @@ watermark_scripts :=
 	"universes beyond ponies twilight sparkle":           { watermark_blend(wm_directory + "ponies/twilight sparkle.png", face:face) }
 	"universes beyond ponies nightmare moon":             { watermark_blend(wm_directory + "ponies/nightmare moon.png", face:face) }
 	"universes beyond ponies luna":                       { watermark_blend(wm_directory + "ponies/luna.png", face:face) }
+	"universes beyond avatar water tribe":                { watermark_blend(wm_directory + "avatar/water_tribe.png", face:face) }
+	"universes beyond avatar earth kingdom":              { watermark_blend(wm_directory + "avatar/earth_kingdom.png", face:face) }
+	"universes beyond avatar fire nation":                { watermark_blend(wm_directory + "avatar/fire_nation.png", face:face) }
+	"universes beyond avatar air nomads":                 { watermark_blend(wm_directory + "avatar/air_nomads.png", face:face) }
 	
 	"custom watermark one":                               { build_custom_watermark_blend(1) }
 	"custom watermark two":                               { build_custom_watermark_blend(2) }
@@ -2756,8 +2917,9 @@ face_is_rotated :=
 information_offset_top_1 := { 0 }
 #### To shift the card number, set code and artist credit left/right:
 information_codes_offset_left_1 := { 0 }
-#### To shift the actual copyright lines left/right:
+#### To shift the actual copyright lines left/right or up/down:
 information_copyright_offset_right_1 := { 0 }
+information_copyright_offset_top_1 := { 0 }
 #### To shift the copyright up/down on creatures/walkers, if the pt/loyalty box is very short/tall:
 information_copyright_offset_pt_top_1 := { 0 }
 #### To shift the secondary copyright left/right on creatures/walkers, if the pt/loyalty box is very narrow/wide:
@@ -3439,11 +3601,17 @@ loyalty_cost_box_default :=
 	else if	contains(cost, match: "-") then	"-, shadow"
 	else									"0, shadow"
 }
+loyalty_boxes_image_folder := { "/magic-modules.mse-include/loyalty/" }
 loyalty_cost_box_image :=
 {
 	shape := remove_comma(loyalty_cost_box_field(input + (instance-1)*8))
 	if contains(shape, match: "none") then ""
-	else "/magic-modules.mse-include/loyalty/loyalty cost " + shape + ".png"
+	else (
+	folder := loyalty_boxes_image_folder()
+	if not ends_dash(folder) then folder := folder + "/"
+	name := "loyalty cost " + shape + ".png"
+	path := folder + name
+	if exists_in_package(path) then path else "/magic-modules.mse-include/loyalty/" + name)
 }
 
 loyalty_field :=
@@ -3469,7 +3637,12 @@ loyalty_box_image :=
 {
 	shape := remove_comma(loyalty_box_field(instance))
 	if has_none(shape) then ""
-	else "/magic-modules.mse-include/loyalty/" + shape + ".png"
+	else (
+	folder := loyalty_boxes_image_folder()
+	if not ends_dash(folder) then folder := folder + "/"
+	name := shape + ".png"
+	path := folder + name
+	if exists_in_package(path) then path else "/magic-modules.mse-include/loyalty/" + name)
 }
 
 loyalty_face_1 := { 1 }
@@ -3756,10 +3929,11 @@ loyalty_stripe_mask :=
 		)
 	)
 }
+loyalty_stripe_alpha_default := { "40" }
 loyalty_stripe_separator_image :=
 {
 	color := if instance <= 1 then (styling.stripes_color or else rgb(255,255,255)) else (styling["stripes_color_" + instance] or else rgb(255,255,255))
-	alpha := if instance <= 1 then (styling.stripes_opacity_percentage or else "40") else (styling["stripes_opacity_percentage_" + instance] or else "40")
+	alpha := if instance <= 1 then (styling.stripes_opacity_percentage or else loyalty_stripe_alpha_default()) else (styling["stripes_opacity_percentage_" + instance] or else loyalty_stripe_alpha_default())
 	set_alpha(
 		recolor_image(
 			"/magic-modules.mse-include/loyalty/stripe_" + (if (input mod 2) == 0 then "top" else "bottom") + ".png",
@@ -3767,14 +3941,14 @@ loyalty_stripe_separator_image :=
 		),
 		alpha: get_alpha_percentage(
 			alpha,
-			default: 40
+			default: loyalty_stripe_alpha_default()
 		)
 	)
 }
 loyalty_stripe_image :=
 {
 	color := if instance <= 1 then (styling.stripes_color or else rgb(255,255,255)) else (styling["stripes_color_" + instance] or else rgb(255,255,255))
-	alpha := if instance <= 1 then (styling.stripes_opacity_percentage or else "40") else (styling["stripes_opacity_percentage_" + instance] or else "40")
+	alpha := if instance <= 1 then (styling.stripes_opacity_percentage or else loyalty_stripe_alpha_default()) else (styling["stripes_opacity_percentage_" + instance] or else loyalty_stripe_alpha_default())
 	set_alpha(
 		recolor_image(
 			"/magic-modules.mse-include/loyalty/color.png",
@@ -3782,14 +3956,15 @@ loyalty_stripe_image :=
 		),
 		alpha: get_alpha_percentage(
 			alpha,
-			default: 40
+			default: loyalty_stripe_alpha_default()
 		)
 	)
 }
+loyalty_textbox_background_alpha_default := { "70" }
 loyalty_textbox_background_image :=
 {
 	color := if instance <= 1 then (styling.textbox_color or else rgb(255,255,255)) else (styling["textbox_color_" + instance] or else rgb(255,255,255))
-	alpha := if instance <= 1 then (styling.textbox_opacity_percentage or else "70") else (styling["textbox_opacity_percentage_" + instance] or else "70")
+	alpha := if instance <= 1 then (styling.textbox_opacity_percentage or else loyalty_textbox_background_alpha_default()) else (styling["textbox_opacity_percentage_" + instance] or else loyalty_textbox_background_alpha_default())
 	set_alpha(
 		recolor_image(
 			"/magic-modules.mse-include/loyalty/color.png",
@@ -3797,7 +3972,7 @@ loyalty_textbox_background_image :=
 		),
 		alpha: get_alpha_percentage(
 			alpha,
-			default: 70
+			default: loyalty_textbox_background_alpha_default()
 		)
 	)
 }
@@ -4088,7 +4263,8 @@ casting_cost_width :=
 	scale := min(map.width, map.height)/375
 	minimum := 30 * scale
 	buffer := 5 * scale
-	max(minimum, card_style.casting_cost.content_width) + buffer + offset
+	cost_field := if face == 1 then card_style.casting_cost else card_style["casting_cost_{face}"]
+	max(minimum, cost_field.content_width) + buffer + offset
 }
 casting_cost_height :=
 {
@@ -4157,7 +4333,8 @@ name_top :=
 name_right :=
 {
 	map := face_coordinates_map(face)
-	casting_cost_width_1 := if card_style.casting_cost.content_width == 0 then 0 else card_style.casting_cost.content_width + 3 * min(map.width, map.height)/375
+	cost_field := if face == 1 then card_style.casting_cost else card_style["casting_cost_{face}"]
+	casting_cost_width_1 := if cost_field.content_width == 0 then 0 else cost_field.content_width + 3 * min(map.width, map.height)/375
 	if map.width > map.height then
 			map.left + 482 * map.width/523 - casting_cost_width_1 + offset
 	else	map.left + 341 * map.width/375 - casting_cost_width_1 + offset
@@ -4253,6 +4430,66 @@ nameline_offset_top_3 := { 0 }
 nameline_offset_left_3 := { 0 }
 nameline_offset_width_3 := { 0 }
 nameline_offset_height_3 := { 0 }
+
+############################################################## Alias
+alias_left :=
+{
+	map := face_coordinates_map(face)
+	off2 := if face == 2 then alias_offset_width_2() else alias_offset_width_1()
+	map.left + (map.width - (298 * min(map.width, map.height)/375) - off2)/2 + offset
+}
+alias_top :=
+{
+	map := face_coordinates_map(face)
+	57 * min(map.width, map.height)/375 + offset
+}
+alias_height :=
+{
+	map := face_coordinates_map(face)
+	20 * min(map.width, map.height)/375 + offset
+}
+alias_width :=
+{
+	map := face_coordinates_map(face)
+	298 * min(map.width, map.height)/375 + offset
+}
+alias_offset_text :=
+{
+	map := face_coordinates_map(face)
+	min(map.width, map.height)/375 * -1.5
+}
+alias_font_size :=
+{
+	map := face_coordinates_map(face)
+	9 * min(map.width, map.height)/375
+}
+
+alias_enabled := 			{ card.alias != "" }
+alias_offset_top_1 := 		{ 0 }
+alias_offset_left_1 := 		{ 0 }
+alias_offset_height_1 := 	{ 0 }
+alias_offset_width_1 := 	{ 0 }
+alias_offset_text_top_1 :=	{ 0 }
+alias_left_1 := 			{ alias_left(face: 1,		offset:alias_offset_left_1()) }
+alias_top_1 := 				{ alias_top(face: 1, 		offset:alias_offset_top_1()) }
+alias_height_1 := 			{ alias_height(face: 1, 	offset:alias_offset_height_1()) }
+alias_width_1 := 			{ alias_width(face: 1, 		offset:alias_offset_width_1()) }
+alias_mask :=				{ "" }
+alias_angle_1 :=			{ 0 }
+
+alias_enabled_2 := 			{ card.alias_2 != "" }
+alias_offset_top_2 := 		{ 0 }
+alias_offset_left_2 := 		{ 0 }
+alias_offset_height_2 := 	{ 0 }
+alias_offset_width_2 := 	{ 0 }
+alias_offset_text_top_2 :=	{ 0 }
+alias_left_2 := 			{ alias_left(face: 2,		offset:alias_offset_left_2()) }
+alias_top_2 := 				{ alias_top(face: 2, 		offset:alias_offset_top_2()) }
+alias_height_2 := 			{ alias_height(face: 2, 	offset:alias_offset_height_2()) }
+alias_width_2 := 			{ alias_width(face: 2, 		offset:alias_offset_width_2()) }
+alias_mask_2 :=				{ "" }
+alias_angle_2 :=			{ 0 }
+
 
 ############################################################## Stamps
 ### The stamp to use if the user hasn't overwritten it for this card
@@ -4425,43 +4662,7 @@ crown_offset_top_2 :=  { 0 }
 crown_disabled_3 := { not is_legend(face:3) }
 crown_offset_left_3 := { 0 }
 crown_offset_top_3 :=  { 0 }
-############################################################## Overlay masks
-foil_mask_base_image := { "foil_mask.png" }
-foil_mask_added_sections := {
-	output := []
-	pt_field := if face == 1 then card.pt else card["pt_" + face]
-	if pt_field != "" then output := output + ["foil_mask_pt.png"]
-	output
-}@(face:1)
-foil_mask_removed_sections := {
-	output := []
-	sh := stamp_shape(field:face)
-	if sh == "round" then output := output + ["foil_mask_round.png"]
-	else if sh == "triangle" then output := output + ["foil_mask_triangle.png"]
-	output
-}@(face:1)
-foil_mask_blended_image := {
-	img := foil_mask_base_image(face)
-	if img != "" then ( 
-		added := foil_mask_added_sections(face)
-		removed := foil_mask_removed_sections(face)
-		len_add := length(added)
-		len_rem := length(removed)
-		if(len_add > 0) then (
-			for i from 0 to len_add-1 do (
-				img := masked_blend(dark:img, light:added[i], mask:added[i]);
-				"dummy return"
-			)
-		)
-		if(len_rem > 0) then (
-			for i from 0 to len_rem-1 do (
-				img := masked_blend(light:img, dark:removed[i], mask:removed[i]);
-				"dummy return"
-			)
-		)
-	)
-	img
-}@(face:1)
+
 ############################################################## module styling
 popout_coord := {
 	split := split_comma(field)
@@ -4481,8 +4682,8 @@ popout_height_2 := { popout_coord(3, field:styling.popout_art_2_coordinates or e
 popout_angle_2  := { popout_coord(4, field:styling.popout_art_2_coordinates or else "", lim:4) }
 
 module_chop := {
-	split := split_comma(styling.chop_text_box)
-	if length(styling.chop_text_box or else "") > input
+	split := split_comma(styling.chop_text_box or else "")
+	if length(split) > input
 		then to_number_lax(split[input])
 	else 0
 }
@@ -4544,16 +4745,6 @@ popout_top_2	:= { popout_coord(1, field:styling.popout_art_2_coordinates or else
 popout_width_2  := { popout_coord(2, field:styling.popout_art_2_coordinates or else "") }
 popout_height_2 := { popout_coord(3, field:styling.popout_art_2_coordinates or else "") }
 popout_angle_2  := { popout_coord(4, field:styling.popout_art_2_coordinates or else "", lim:4) }
-
-module_chop := {
-	split := split_comma(styling.chop_text_box)
-	if length(styling.chop_text_box or else "") > input
-		then to_number_lax(split[input])
-	else 0
-}
-chop_top    := { module_chop(0) }
-chop_bottom := { module_chop(1) }
-chop_right  := { module_chop(2) }
 
 ############################################################## Custom corner symbols
 verify_symbol_image := {
@@ -4682,6 +4873,27 @@ swap_fonts_name3_default := [
 	vertical: {0},
 	italic: {""}
 ]
+swap_fonts_casting_cost_default := [
+	name: {"MPlantin"},
+	size: {name_font_size()},
+	color: {"black"},
+	vertical: {0},
+	italic: {"MPlantin-Italic"}
+]
+swap_fonts_casting_cost2_default := [
+	name: {"MPlantin"},
+	size: {name2_font_size()},
+	color: {"black"},
+	vertical: {0},
+	italic: {"MPlantin-Italic"}
+]
+swap_fonts_casting_cost3_default := [
+	name: {"MPlantin"},
+	size: {name3_font_size()},
+	color: {"black"},
+	vertical: {0},
+	italic: {"MPlantin-Italic"}
+]
 swap_fonts_type_default := [
 	name: {"Beleren Bold"},
 	size: {13},
@@ -4745,18 +4957,21 @@ swap_fonts_pt3_default := [
 	vertical: {0},
 	italic: {""}
 ]
-swap_fonts_name_src :=  { styling.custom_name_font   or else "" }
-swap_fonts_name2_src := { styling.custom_name_2_font or else "" }
-swap_fonts_name3_src := { styling.custom_name_3_font or else "" }
-swap_fonts_type_src :=  { styling.custom_type_font   or else "" }
-swap_fonts_type2_src := { styling.custom_type_2_font or else "" }
-swap_fonts_type3_src := { styling.custom_type_3_font or else "" }
-swap_fonts_body_src :=  { styling.custom_body_font   or else "" }
-swap_fonts_body2_src := { styling.custom_body_2_font or else "" }
-swap_fonts_body3_src := { styling.custom_body_3_font or else "" }
-swap_fonts_pt_src :=    { styling.custom_pt_font     or else "" }
-swap_fonts_pt2_src :=   { styling.custom_pt_2_font   or else "" }
-swap_fonts_pt3_src :=   { styling.custom_pt_3_font   or else "" }
+swap_fonts_name_src :=          { styling.custom_name_font           or else "" }
+swap_fonts_name2_src :=         { styling.custom_name_2_font         or else "" }
+swap_fonts_name3_src :=         { styling.custom_name_3_font         or else "" }
+swap_fonts_casting_cost_src :=  { styling.custom_casting_cost_font   or else "" }
+swap_fonts_casting_cost2_src := { styling.custom_casting_cost_2_font or else "" }
+swap_fonts_casting_cost3_src := { styling.custom_casting_cost_3_font or else "" }
+swap_fonts_type_src :=          { styling.custom_type_font           or else "" }
+swap_fonts_type2_src :=         { styling.custom_type_2_font         or else "" }
+swap_fonts_type3_src :=         { styling.custom_type_3_font         or else "" }
+swap_fonts_body_src :=          { styling.custom_body_font           or else "" }
+swap_fonts_body2_src :=         { styling.custom_body_2_font         or else "" }
+swap_fonts_body3_src :=         { styling.custom_body_3_font         or else "" }
+swap_fonts_pt_src :=            { styling.custom_pt_font             or else "" }
+swap_fonts_pt2_src :=           { styling.custom_pt_2_font           or else "" }
+swap_fonts_pt3_src :=           { styling.custom_pt_3_font           or else "" }
 #### specific swap functions
 name_font := {
 	swap_font_name(
@@ -4788,6 +5003,9 @@ name_font_italic := {
 		font_name: swap_fonts_name_default.italic()
 	)
 }
+name_shadow_color :=			{ rgba(0,0,0,0) }
+name_shadow_displacement_x :=	{ 0 }
+name_shadow_displacement_y :=	{ 0 }
 
 name2_font := {
 	swap_font_name(
@@ -4819,6 +5037,9 @@ name2_font_italic := {
 		font_name: swap_fonts_name2_default.italic()
 	)
 }
+name2_shadow_color :=			{ rgba(0,0,0,0) }
+name2_shadow_displacement_x :=	{ 0 }
+name2_shadow_displacement_y :=	{ 0 }
 
 name3_font := {
 	swap_font_name(
@@ -4848,6 +5069,102 @@ name3_font_italic := {
 	swap_font_italic(
 		src: swap_fonts_name3_src(),
 		font_name: swap_fonts_name3_default.italic()
+	)
+}
+name3_shadow_color :=			{ rgba(0,0,0,0) }
+name3_shadow_displacement_x :=	{ 0 }
+name3_shadow_displacement_y :=	{ 0 }
+
+casting_cost_font := {
+	swap_font_name(
+		src: swap_fonts_casting_cost_src(), 
+		font_name: swap_fonts_casting_cost_default.name()
+	)
+}
+casting_cost_font_size := {
+	swap_font_size(
+		src: swap_fonts_casting_cost_src(), 
+		font_size: swap_fonts_casting_cost_default.size()
+	) - shrink_name()
+}
+casting_cost_font_color := {
+	swap_font_color(
+		src: swap_fonts_casting_cost_src(),
+		font_color: swap_fonts_casting_cost_default.color()
+	)
+}
+casting_cost_font_vertical := {
+	swap_font_vertical(
+		src: swap_fonts_casting_cost_src(),
+		vertical: swap_fonts_casting_cost_default.vertical()
+	)
+}
+casting_cost_font_italic := {
+	swap_font_italic(
+		src: swap_fonts_casting_cost_src(),
+		font_name: swap_fonts_casting_cost_default.italic()
+	)
+}
+
+casting_cost2_font := {
+	swap_font_name(
+		src: swap_fonts_casting_cost2_src(), 
+		font_name: swap_fonts_casting_cost2_default.name()
+	)
+}
+casting_cost2_font_size := {
+	swap_font_size(
+		src: swap_fonts_casting_cost2_src(), 
+		font_size: swap_fonts_casting_cost2_default.size()
+	) - shrink_name2()
+}
+casting_cost2_font_color := {
+	swap_font_color(
+		src: swap_fonts_casting_cost2_src(),
+		font_color: swap_fonts_casting_cost2_default.color()
+	)
+}
+casting_cost2_font_vertical := {
+	swap_font_vertical(
+		src: swap_fonts_casting_cost2_src(),
+		vertical: swap_fonts_casting_cost2_default.vertical()
+	)
+}
+casting_cost2_font_italic := {
+	swap_font_italic(
+		src: swap_fonts_casting_cost2_src(),
+		font_name: swap_fonts_casting_cost2_default.italic()
+	)
+}
+
+casting_cost3_font := {
+	swap_font_name(
+		src: swap_fonts_casting_cost3_src(), 
+		font_name: swap_fonts_casting_cost3_default.name()
+	)
+}
+casting_cost3_font_size := {
+	swap_font_size(
+		src: swap_fonts_casting_cost3_src(), 
+		font_size: swap_fonts_casting_cost3_default.size()
+	) - shrink_name2()
+}
+casting_cost3_font_color := {
+	swap_font_color(
+		src: swap_fonts_casting_cost3_src(),
+		font_color: swap_fonts_casting_cost3_default.color()
+	)
+}
+casting_cost3_font_vertical := {
+	swap_font_vertical(
+		src: swap_fonts_casting_cost3_src(),
+		vertical: swap_fonts_casting_cost3_default.vertical()
+	)
+}
+casting_cost3_font_italic := {
+	swap_font_italic(
+		src: swap_fonts_casting_cost3_src(),
+		font_name: swap_fonts_casting_cost3_default.italic()
 	)
 }
 
@@ -4881,6 +5198,9 @@ type_font_italic := {
 		font_name: swap_fonts_type_default.italic()
 	)
 }
+type_shadow_color :=			{ rgba(0,0,0,0) }
+type_shadow_displacement_x :=	{ 0 }
+type_shadow_displacement_y :=	{ 0 }
 
 type2_font := {
 	swap_font_name(
@@ -4912,6 +5232,9 @@ type2_font_italic := {
 		font_name: swap_fonts_type2_default.italic()
 	)
 }
+type2_shadow_color :=			{ rgba(0,0,0,0) }
+type2_shadow_displacement_x :=	{ 0 }
+type2_shadow_displacement_y :=	{ 0 }
 
 type3_font := {
 	swap_font_name(
@@ -4943,6 +5266,9 @@ type3_font_italic := {
 		font_name: swap_fonts_type3_default.italic()
 	)
 }
+type3_shadow_color :=			{ rgba(0,0,0,0) }
+type3_shadow_displacement_x :=	{ 0 }
+type3_shadow_displacement_y :=	{ 0 }
 
 body_font := {
 	swap_font_name(
@@ -5224,9 +5550,32 @@ alt_nyx_template := {
 	dir := filter_text(src, match:"^([^.]+/)+")
 	"/magic-mainframe-extras.mse-include/" + dir + input + (if land then "l" else "") + fs
 }
+#### Default colors for the alias
+alias_colors := {
+	[
+		w: rgb(255, 255, 255),
+		u: rgb(6, 115, 184),
+		b: rgb(39, 38, 36),
+		r: rgb(168, 88, 81),
+		g: rgb(6, 120, 69),
+		a: rgb(239, 238, 236),
+		m: rgb(243, 210, 105),
+		c: rgb(173, 151, 137)
+	][input]
+}
+#### Folder containing files
+alias_src := "/magic-modules.mse-include/alias/"
+#### Construct alias bar
+alias_custom_template := {
+	new_color := alias_colors(input, land:land)
+	color := recolor_image(alias_src+"color.png", color:new_color)
+	masked_blend(dark:color, light:alias_src+"base.png", mask:alias_src+"mask.png")
+}@(land:false)
+alias_custom_land_template := {alias_custom_template(input, land:true)}
 harder_script := [
 	alt_nyx: alt_nyx_template,
-	custom_border: custom_border_image
+	custom_border: custom_border_image,
+	alias: alias_custom_template
 ]
 ############################################################## Card column sorting
 type_sort_script :=
@@ -5296,6 +5645,70 @@ rarity_sort_script :=
 	else if	input == "mythic rare"	then	"4"
 	else if	input == "masterpiece"	then	"5"
 	else									"6"
+}
+############################################################## Card import
+dfc_split_import_script :=
+{
+	face_values := split_face(value)
+	for x from 1 to length(face_values) do
+	(
+		suffix := if x <= 1 then "" else "_" + x
+		import_script(value:face_values[x-1], suffix:suffix)
+	)
+}
+name_import_script :=
+{
+	make_map(keys:["name" + suffix], values:[value])
+}
+pt_import_script :=
+{
+	values := split_text(value, match: lang_setting("pt_separator"))
+	if length(values) != 2 then [] else (
+	keys := ["power" + suffix, "toughness" + suffix]
+	make_map(keys:keys, values:values))
+}
+type_import_script :=
+{
+	values := split_text(value, match: "( ?- ?|" + lang_setting("type_separator") + ")")
+	keys := ["super_type" + suffix]
+	if length(values) > 1 then keys := keys + ["sub_type" + suffix]
+	make_map(keys:keys, values:values)
+}
+text_import_script :=
+{
+	suffix := if margin_code == "text" then "" else replace(margin_code, match: "text", replace: "_")
+	keys := ["rule_text" + suffix]
+	values := [convert_scryfall_braces(convert_scryfall_mana(value))]
+	make_map(keys:keys, values:values)
+}
+cc_import_script :=
+{
+	keys := ["casting_cost" + suffix]
+	values := [convert_scryfall_mana(value)]
+	make_map(keys:keys, values:values)
+}
+rarity_import_script :=
+{
+	keys := ["rarity" + suffix]
+	values := [if value == "mythic" then "mythic rare" else if value == "bonus" then "special" else value]
+	make_map(keys:keys, values:values)
+}
+border_import_script :=
+{
+	keys := ["border_color"]
+	values := [if value == "borderless" then rgba(0,0,0,0) else value]
+	make_map(keys:keys, values:values)
+}
+rule_text_to_level_text :=
+{
+	suffix := if input <= 1 then "" else "_" + input
+	offset := if suffix == "" then 0 else (to_int(substring(suffix, begin:1))-1)*8
+	values := split_line(card["rule_text" + suffix])
+	count := length(values)
+	keys := for x from 1 to count do ["level_" + (x+offset) + "_text"]
+	values := values + [""]
+	keys := keys + ["rule_text" + suffix]
+	make_map(keys:keys, values:values)
 }
 ############################################################## Custom index
 search_pull := filter_text@(match:"search(name|mana|type|rules|flavor|text|notes)")

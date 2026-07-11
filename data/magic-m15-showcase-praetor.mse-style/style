@@ -1,30 +1,30 @@
-﻿mse version: 2.0.0
-game: magic
-short name: Praetor
-full name: Phyrexian Showcase
-icon: card-sample.png
-installer group: magic/m15 style/normal cards
-position hint: 095
+﻿mse version: 		2.0.0
+game: 				magic
+short name: 		Praetor
+full name: 			Phyrexian Showcase
+icon: 				card-sample.png
+installer group: 	magic/m15 style/normal cards
+position hint: 		095
 
-version: 2024-09-01
+version: 			2024-09-01
 depends on:
-	package: magic.mse-game
-	version: 2014-06-25
+	package: 		magic.mse-game
+	version: 		2014-06-25
 depends on:
-	package: magic-default-image.mse-include
-	version: 2007-09-23
+	package: 		magic-default-image.mse-include
+	version: 		2007-09-23
 depends on:
-	package: magic-modules.mse-include
-	version: 2024-10-01
+	package: 		magic-modules.mse-include
+	version: 		2024-10-01
 depends on:
-	package: magic-mana-large.mse-symbol-font
-	version: 2007-09-23
+	package: 		magic-mana-large.mse-symbol-font
+	version: 		2007-09-23
 depends on:
-	package: magic-mana-small.mse-symbol-font
-	version: 2007-09-23
+	package: 		magic-mana-small.mse-symbol-font
+	version: 		2007-09-23
 depends on:
-	package: magic-mainframe-extras.mse-include
-	version: 2007-09-23
+	package: 		magic-mainframe-extras.mse-include
+	version: 		2007-09-23
 
 card width: 375
 card height: 523
@@ -99,6 +99,19 @@ init script:
 	un_png := replace@(match:".png", replace: "")
 	is_vehicle := {lang_setting("is_vehicle")(card.sub_type)}
 	card_stamp_offset_top_1 := { if stamp_shape() == "triangle" then 4 else 0 }
+	alias_colors := {
+		[
+			w: rgb(198, 188, 168),
+			u: rgb(20, 135, 163),
+			b: rgb(66, 68, 68),
+			r: rgb(202, 84, 59),
+			g: rgb(86, 162, 112),
+			a: rgb(170, 181, 185),
+			m: rgb(209, 183, 92),
+			c: rgb(174, 185, 188)
+		][input]
+	}
+
 ############################################################## Set info fields
 set info style:
 	symbol:
@@ -223,6 +236,7 @@ include file: /magic-modules.mse-include/information/card_fields
 include file: /magic-modules.mse-include/stamps/card_fields
 include file: /magic-modules.mse-include/rarities/card_fields
 include file: /magic-modules.mse-include/separators/card_fields
+include file: /magic-modules.mse-include/alias/card_fields
 card style:
 	############################# Background stuff
 	border color:
