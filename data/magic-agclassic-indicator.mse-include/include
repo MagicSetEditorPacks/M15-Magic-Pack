@@ -1,0 +1,32 @@
+﻿mse version:		2.6.0
+short name:			AgClassic Color Indicator
+position hint:		240080
+installer group:	magic/Old Frames/Fan Made/AgClassic Color Indicator
+version:			2026-08-28
+
+
+# This file doesn't do anything, other files in this directory
+# can be included in game/style files:
+#
+#depends on:
+#	package: magic-agclassic-indicator.mse-include
+#	version: 2015-12-20
+#
+#...
+#
+#init script:
+#	# Load scripts for AgClassic Color Indicator
+#	include file: /magic-agclassic-indicator.mse-include/scripts
+#
+#...
+#
+#	############################# Card type
+#	indicator:
+#		left: 20
+#		top: 295
+#		width: 15
+#		height: 15
+#		z index: 2
+#		render style: image
+#		visible: { has_identity() }
+#		image: { card_indicator() }
