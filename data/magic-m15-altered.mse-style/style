@@ -177,7 +177,7 @@ init script:
 		slide3_shifted: "/magic-modules.mse-include/levels/slides/3/shifted/"
 		circle: "/magic-modules.mse-include/levels/circles/station/"
 		
-		devoid: "/magic-modules.mse-include/cards/35 m15 simple/devoid/"
+		devoid: "/magic-modules.mse-include/cards/375 m15 simple/devoid/"
 		miracle: "/magic-modules.mse-include/trims/miracle/"
 		miracle_shifted: "/magic-modules.mse-include/trims/miracle/shifted/"
 		miracle_inv: "/magic-modules.mse-include/trims/miracle/inverted/"
